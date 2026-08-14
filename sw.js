@@ -1,3 +1,55 @@
+// ── Conteo PT — Service Worker v4.80.0 ─────────────────────────────────────
+// Cambios v4.80.0 (rediseño grande de Tabla PT + migración de Firebase):
+//   · QUITADOS — Selectores en cascada (Calidad→Material→Tipo→Medida→
+//     Espesor) en Conteo, Entrada (MO), Salidas (SRO), BNC, el modal
+//     "Agregar producto a MO/SRO" y el modo tradicional de Despachos —
+//     ahora solo queda el buscador en vivo (código o descripción) en
+//     todos ellos, igual al que ya usaba la Ficha Digital del Mapa. En
+//     MO/SRO/BNC/regAgr y Conteo, Calidad queda preseleccionada en 1RA
+//     por defecto.
+//   · REDISEÑO — Tabla PT ya no es una colección propia por área con
+//     Tipo/Material/Medida/Pies/Espesor capturados a mano: ahora se
+//     alimenta directo de la Base Odoo (referencia), que pasa a ser la
+//     única fuente de productos de todo el sistema. Se mantienen como
+//     campos reales Color, Peso (Kg/U, 3 decimales) y Unidades/Atado;
+//     Tipo/Material/Medida/Pies/Espesor/Calidad se derivan automáticamente
+//     de la descripción y el código, solo para uso interno (Resumen,
+//     reportes) — ya no se capturan ni se muestran como columnas. Se
+//     eliminó el Código Corto por completo.
+//   · NUEVO — Cada código de la Base Odoo se clasifica automáticamente por
+//     Área (Tubería/Costanera/Lámina/Tiras-Bobinas/Insumos) según palabra
+//     clave en la descripción, editable directo en la tabla si la
+//     detección se equivoca. "Insumos" es una etiqueta para lo que no es
+//     material de PT (pintura, guantes, herramientas, etc.) — no tiene
+//     pestañas propias ni aparece en el login.
+//   · NUEVO — Botón "📥 Importar catálogo (Excel)" en Tabla PT: carga
+//     código+descripción+peso desde un Excel tipo Quants de Odoo, solo
+//     agrega códigos nuevos, nunca pisa los existentes.
+//   · NUEVO — Botón "🗑 Eliminar todo" en Tabla PT (protegido con PIN):
+//     borra todos los códigos de la Base Odoo, de todas las áreas a la
+//     vez. Color y Peso/U-Atado ahora se editan con un botón que abre un
+//     modal dedicado, en vez de campos libres directo en la tabla.
+//   · MEJORADO — Varios ajustes de legibilidad en la tabla de Tabla PT:
+//     columnas mejor distribuidas (Código/Descripción/Área ya no se
+//     encimaban en pantallas angostas), U/Atado y Kg/U centrados, Color
+//     pasó de select desplegable a modal con grilla de opciones.
+//   · CORREGIDO — Varios casos reales del parser que deriva Tipo/Material
+//     desde la descripción de Odoo: no reconocía "Galv." abreviado, no
+//     tenía rama para "Bobina" (solo "Tira"), solo aceptaba género
+//     femenino "Roja/Blanca" cuando las descripciones usan mayormente
+//     masculino "Rojo/Blanco", no reconocía "Liso Cerca" ni "Mecánico"
+//     (solo "Proceso"), y la familia Lisa nunca extraía la Medida. Tubo
+//     sin material especificado y Lisa Fría ahora asumen Negro/Galvanizado
+//     por defecto respectivamente, según patrón real del catálogo.
+//   · MIGRACIÓN — El proyecto de Firebase cambió de `conteo-pt` a
+//     `condor-pt-v2` (Firestore + Storage nuevos, ambos en modo
+//     producción) por motivos de seguridad — las copias de la app ya
+//     instaladas fuera del equipo actual quedan con acceso cortado al
+//     apuntar al proyecto viejo, sin datos nuevos visibles de ahí en más.
+//     Las 3 Cloud Functions de IA (escaneo de despacho/torres/tiras) se
+//     dejaron por ahora en el proyecto viejo, sin migrar.
+//
+
 // ── Conteo PT — Service Worker v4.78.0 ─────────────────────────────────────
 // Cambios v4.78.0 (Alertas 🚨 — nuevo):
 //   · NUEVO — Botón 🚨 en el header: disponible para todos los perfiles y
@@ -1853,7 +1905,7 @@
 //   · Firebase Storage habilitado: se agrega el SDK firebase-storage-compat
 //     v9.23.0, html2canvas v1.4.1 y jsPDF v2.5.1 como dependencias externas.
 
-const CACHE_NAME = 'conteo-pt-v4.78.0';
+const CACHE_NAME = 'conteo-pt-v4.80.0';
 
 const ASSETS = [
   './',
