@@ -1,3 +1,25 @@
+// ── Conteo PT — Service Worker v4.81.0 ─────────────────────────────────────
+// Cambios v4.81.0 (buscadores de Conteo/MO/SRO/BNC/regAgr — paridad con Mapa):
+//   · CORREGIDO — El buscador de Conteo no filtraba por la Calidad (1RA/2DA)
+//     seleccionada, a diferencia de MO/SRO/BNC que sí lo hacían.
+//   · NUEVO — Al cambiar Calidad en Conteo con un producto ya elegido, ahora
+//     busca y aplica automáticamente su equivalente en la nueva calidad
+//     (mismo código, con o sin el prefijo "2-"); si no existe, limpia la
+//     selección en vez de dejar puesto el producto de la calidad anterior.
+//   · CORREGIDO — Unificada la lógica de comparación de texto de los
+//     buscadores de Conteo/MO/SRO/BNC/regAgr con la que ya usaban Ficha
+//     Digital (Mapa) y Despachos: un número entero (ej. "6") ahora compara
+//     por valor exacto contra el texto, para que ya no encuentre "16 pies"
+//     al buscar "6"; además, se exige que todas las palabras coincidan en
+//     la descripción, o que todas coincidan en el código (antes se
+//     mezclaban ambos criterios palabra por palabra).
+//   · CORREGIDO — Los botones 1RA/2DA de Conteo/MO/SRO/BNC/regAgr no
+//     refrescaban la lista de resultados ya mostrada al tocarlos (Despachos
+//     y Ficha Digital sí lo hacían) — ahora los 5 vuelven a ejecutar la
+//     búsqueda en vivo al cambiar de calidad, igual que el buscador del
+//     Mapa.
+//
+
 // ── Conteo PT — Service Worker v4.80.0 ─────────────────────────────────────
 // Cambios v4.80.0 (rediseño grande de Tabla PT + migración de Firebase):
 //   · QUITADOS — Selectores en cascada (Calidad→Material→Tipo→Medida→
@@ -1905,7 +1927,7 @@
 //   · Firebase Storage habilitado: se agrega el SDK firebase-storage-compat
 //     v9.23.0, html2canvas v1.4.1 y jsPDF v2.5.1 como dependencias externas.
 
-const CACHE_NAME = 'conteo-pt-v4.80.0';
+const CACHE_NAME = 'conteo-pt-v4.81.0';
 
 const ASSETS = [
   './',

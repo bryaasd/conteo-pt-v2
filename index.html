@@ -2282,7 +2282,7 @@
       <div style="font-family:'Barlow',sans-serif;font-weight:600;font-size:2.2rem;letter-spacing:0.01em;line-height:1.1">Conteo <span style="color:var(--accent)">PT</span></div>
       <div style="font-size:1.05rem;font-weight:400;color:var(--text);margin-top:0.5rem;font-family:'Barlow',sans-serif">Selecciona tu perfil para continuar</div>
       <div id="loginFechaHoy" style="font-size:0.88rem;color:var(--muted);margin-top:0.6rem;font-weight:400;letter-spacing:0.02em;font-family:'Barlow',sans-serif"></div>
-      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;letter-spacing:0.02em;font-family:'Barlow',sans-serif">Versión del sistema <span style="color:var(--accent);font-weight:500">v4.80.0</span></div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;letter-spacing:0.02em;font-family:'Barlow',sans-serif">Versión del sistema <span style="color:var(--accent);font-weight:500">v4.81.0</span></div>
       <div style="margin-top:0.85rem;display:inline-block;padding:6px 18px;border-radius:30px;background:linear-gradient(90deg,rgba(245,158,11,0.16),rgba(249,115,22,0.16));border:1px solid rgba(245,158,11,0.35)">
         <span style="font-family:'Barlow',sans-serif;font-weight:500;font-size:0.95rem;letter-spacing:0.04em;color:var(--accent)">💛 mari29.05.1961</span>
       </div>
@@ -6899,10 +6899,27 @@ function setCalidad(val) {
   calidad = val;
   document.getElementById('btn1ra').className = 'q-btn' + (val === '1RA CALIDAD' ? ' active-1ra' : '');
   document.getElementById('btn2da').className = 'q-btn' + (val === '2DA CALIDAD' ? ' active-2da' : '');
-  onTipoChange();
-}
 
-let _generalDesbloqueado = false; // true una vez que se ingresa el PIN correcto en esta sesión
+  // Si ya había un producto elegido, buscar su equivalente en la nueva calidad
+  // (mismo código, con o sin el prefijo "2-") y aplicarlo automáticamente.
+  if (currentProduct && currentProduct.codigo) {
+    const codActual = currentProduct.codigo.trim().toUpperCase();
+    const esActual2da = codActual.startsWith('2-');
+    let codBuscado = null;
+    if (val === '2DA CALIDAD' && !esActual2da) codBuscado = '2-' + codActual;
+    else if (val === '1RA CALIDAD' && esActual2da) codBuscado = codActual.slice(2);
+    if (codBuscado) {
+      const equivalente = BD.find(x => x.codigo && x.codigo.trim().toUpperCase() === codBuscado);
+      if (equivalente) { _conteoAplicarProducto(equivalente); return; }
+    }
+    // No se encontró equivalente en la nueva calidad — se limpia el producto elegido
+    // (no tiene sentido dejar seleccionado un producto de la calidad anterior).
+    currentProduct = null; updateProductCard();
+  }
+
+  onTipoChange();
+  conteoBuscarEnVivo();
+}
 
 function setModoConteo(modo) {
   const destino = modo === 'parcial' ? 'parcial' : 'general';
@@ -7515,10 +7532,13 @@ function conteoBuscarEnVivo() {
 
   const palabras = _sinTildes(q.toUpperCase()).split(/\s+/).filter(Boolean);
   const filtrados = (BD || []).filter(p => {
+    if (calidad && p.cal !== calidad) return false;
     if (!palabras.length) return true;
     const texto = _sinTildes((p.desc || '').toUpperCase());
     const codigo = _sinTildes((p.codigo || '').toUpperCase());
-    return palabras.every(w => texto.includes(w) || codigo.includes(w));
+    const coincideDescripcion = palabras.every(w => _fichaTextoContienePalabra(texto, w));
+    const coincideCodigo = palabras.every(w => codigo.includes(w));
+    return coincideDescripcion || coincideCodigo;
   }).slice(0, 60);
 
   if (!filtrados.length) {
@@ -14719,7 +14739,9 @@ function moBuscarEnVivo() {
     if (!palabras.length) return true;
     const texto = _sinTildes((p.desc || '').toUpperCase());
     const codigo = _sinTildes((p.codigo || '').toUpperCase());
-    return palabras.every(w => texto.includes(w) || codigo.includes(w));
+    const coincideDescripcion = palabras.every(w => _fichaTextoContienePalabra(texto, w));
+    const coincideCodigo = palabras.every(w => codigo.includes(w));
+    return coincideDescripcion || coincideCodigo;
   }).slice(0, 60);
 
   if (!filtrados.length) {
@@ -14809,7 +14831,9 @@ function sroBuscarEnVivo() {
     if (!palabras.length) return true;
     const texto = _sinTildes((p.desc || '').toUpperCase());
     const codigo = _sinTildes((p.codigo || '').toUpperCase());
-    return palabras.every(w => texto.includes(w) || codigo.includes(w));
+    const coincideDescripcion = palabras.every(w => _fichaTextoContienePalabra(texto, w));
+    const coincideCodigo = palabras.every(w => codigo.includes(w));
+    return coincideDescripcion || coincideCodigo;
   }).slice(0, 60);
 
   if (!filtrados.length) {
@@ -15091,6 +15115,7 @@ function setMoCalidad(val) {
   document.getElementById('moBtnCalidad1').className = 'q-btn' + (val==='1RA CALIDAD' ? ' active-1ra' : '');
   document.getElementById('moBtnCalidad2').className = 'q-btn' + (val==='2DA CALIDAD' ? ' active-2da' : '');
   moCurrentProduct = null; updateMoProductCard(); resetMoMedida();
+  moBuscarEnVivo();
 }
 
 function onMoTipoChange() { moCurrentProduct=null; updateMoProductCard(); resetMoMedida(); onMoMaterialChange(); }
@@ -15386,6 +15411,7 @@ function setBncCalidad(val) {
   document.getElementById('bncBtnCalidad1').className = 'q-btn' + (val==='1RA CALIDAD' ? ' active-1ra' : '');
   document.getElementById('bncBtnCalidad2').className = 'q-btn' + (val==='2DA CALIDAD' ? ' active-2da' : '');
   bncCurrentProduct = null; updateBncProductCard(); resetBncMedida();
+  bncBuscarEnVivo();
 }
 
 function onBncTipoChange() { bncCurrentProduct=null; updateBncProductCard(); resetBncMedida(); onBncMaterialChange(); }
@@ -15598,7 +15624,9 @@ function bncBuscarEnVivo() {
     if (!palabras.length) return true;
     const texto = _sinTildes((p.desc || '').toUpperCase());
     const codigo = _sinTildes((p.codigo || '').toUpperCase());
-    return palabras.every(w => texto.includes(w) || codigo.includes(w));
+    const coincideDescripcion = palabras.every(w => _fichaTextoContienePalabra(texto, w));
+    const coincideCodigo = palabras.every(w => codigo.includes(w));
+    return coincideDescripcion || coincideCodigo;
   }).slice(0, 60);
 
   if (!filtrados.length) {
@@ -16832,7 +16860,9 @@ function regAgrBuscarEnVivo() {
     if (!palabras.length) return true;
     const texto = _sinTildes((p.desc || '').toUpperCase());
     const codigo = _sinTildes((p.codigo || '').toUpperCase());
-    return palabras.every(w => texto.includes(w) || codigo.includes(w));
+    const coincideDescripcion = palabras.every(w => _fichaTextoContienePalabra(texto, w));
+    const coincideCodigo = palabras.every(w => codigo.includes(w));
+    return coincideDescripcion || coincideCodigo;
   }).slice(0, 60);
 
   if (!filtrados.length) {
@@ -16949,6 +16979,7 @@ function setRegAgrCalidad(cal) {
   esp.innerHTML='<option value="">— Seleccionar medida —</option>'; esp.disabled=true;
   _regAgrProduct = null; updateRegAgrProductCard();
   onRegAgrMatChange();
+  regAgrBuscarEnVivo();
 }
 
 function onRegAgrTipoChange() {
@@ -17245,6 +17276,7 @@ function setSroCalidad(val) {
   document.getElementById('sroBtnCalidad1').className='q-btn'+(val==='1RA CALIDAD'?' active-1ra':'');
   document.getElementById('sroBtnCalidad2').className='q-btn'+(val==='2DA CALIDAD'?' active-2da':'');
   onSroMaterialChange();
+  sroBuscarEnVivo();
 }
 
 function onSroMaterialChange() {
