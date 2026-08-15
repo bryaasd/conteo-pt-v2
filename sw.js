@@ -1,3 +1,25 @@
+// ── Conteo PT — Service Worker v4.82.0 ─────────────────────────────────────
+// Cambios v4.82.0 (Resumen/Auditoría — Justificación y registro manual):
+//   · CORREGIDO — Botón "General" de la pestaña Conteo no reaccionaba al
+//     tocarlo: faltaba declarar la variable que controla el desbloqueo por
+//     PIN, así que el script se detenía en silencio antes de pedirlo.
+//   · NUEVO — Columna "JUSTIFICACION" en el reporte de Auditoría y en la
+//     hoja "Detalle" del Reporte Excel de Resumen (solo en la vista Físico
+//     vs Sistema, no en Papelería): junta todos los movimientos pendientes
+//     del código (ledger 👽), su comentario si lo tiene y los días
+//     transcurridos desde la fecha de cada operación.
+//   · RENOMBRADO — El archivo del reporte de Auditoría pasa de
+//     "Justificacion_<área>_<fecha-hora>.xlsx" a
+//     "Justificacion_Inventario_<área>_dd.mm.aaaa_CONTEO.PT.xlsx", con el
+//     mismo formato que el resto de reportes descargables.
+//   · NUEVO — Modal 👽 (Movimientos Odoo), pestaña "Ver movimientos": botón
+//     "➕ Registrar movimiento" para dar de alta una sola fila manual (fecha
+//     por defecto hoy, referencia, Entrada/Salida + cantidad, estado fijo
+//     en ✅ Completada) sin pegar datos desde Excel/Odoo. Se agrega al final
+//     del historial y el saldo se calcula a partir del último movimiento
+//     existente, igual que el resto del flujo.
+//
+
 // ── Conteo PT — Service Worker v4.81.0 ─────────────────────────────────────
 // Cambios v4.81.0 (buscadores de Conteo/MO/SRO/BNC/regAgr — paridad con Mapa):
 //   · CORREGIDO — El buscador de Conteo no filtraba por la Calidad (1RA/2DA)
@@ -1927,7 +1949,7 @@
 //   · Firebase Storage habilitado: se agrega el SDK firebase-storage-compat
 //     v9.23.0, html2canvas v1.4.1 y jsPDF v2.5.1 como dependencias externas.
 
-const CACHE_NAME = 'conteo-pt-v4.81.0';
+const CACHE_NAME = 'conteo-pt-v4.82.0';
 
 const ASSETS = [
   './',

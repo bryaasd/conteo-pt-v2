@@ -5705,6 +5705,7 @@ let odooDataBNC = {}; // Existencia Odoo propia de BNC, independiente de odooDat
 let bncControlCalidadData = {}; // Cantidad de "BNC Control de Calidad" por código, editable en Cuadre BNC
 let bncClasificacionData = {};  // Cantidad "Clasificación" (clasificada a 2da) por código, editable en Cuadre BNC
 let modoConteo = 'parcial'; // 'general' | 'parcial' — controla en qué colección se guarda/lee el Conteo
+let _generalDesbloqueado = false; // controla si ya se ingresó el PIN para Conteo General en esta sesión
 // NOTA: por defecto arranca en 'parcial' (no requiere PIN). Conteo General requiere
 // pasar por setModoConteo('general'), que pide el PIN 2907 antes de habilitarlo.
 let odooData  = {};
@@ -12015,10 +12016,12 @@ function generarReporteResumenExcel() {
   };
 
   const wsDetalleAoa = [
-    ['CÓDIGO', 'CÓDIGO + DESCRIPCIÓN', 'CAL.', 'TIPO', 'MATERIAL', 'MEDIDA', 'ESPESOR', colPrincipal, colSecundaria, 'KG/U', 'PESO TOTAL', 'ESTADO', colDesviacionLabel]
+    esPapeleria
+      ? ['CÓDIGO', 'CÓDIGO + DESCRIPCIÓN', 'CAL.', 'TIPO', 'MATERIAL', 'MEDIDA', 'ESPESOR', colPrincipal, colSecundaria, 'KG/U', 'PESO TOTAL', 'ESTADO', colDesviacionLabel]
+      : ['CÓDIGO', 'CÓDIGO + DESCRIPCIÓN', 'CAL.', 'TIPO', 'MATERIAL', 'MEDIDA', 'ESPESOR', colPrincipal, colSecundaria, 'KG/U', 'PESO TOTAL', 'ESTADO', colDesviacionLabel, 'JUSTIFICACION']
   ];
   rows.forEach(g => {
-    wsDetalleAoa.push([
+    const fila = [
       g.codigo,
       codigoMasDescripcion(g),
       g.cal || '—',
@@ -12032,14 +12035,21 @@ function generarReporteResumenExcel() {
       g.pesoTotal !== null && g.pesoTotal !== undefined ? Number(g.pesoTotal.toFixed(2)) : '',
       estadoTxt(g),
       valorDesviacionCol(g)
-    ]);
+    ];
+    if (!esPapeleria) fila.push(_justificacionParaCodigo(g));
+    wsDetalleAoa.push(fila);
   });
   const wsDetalle = XLSX.utils.aoa_to_sheet(wsDetalleAoa);
-  wsDetalle['!cols'] = [
-    { wch: 16 }, { wch: 40 }, { wch: 8 }, { wch: 14 }, { wch: 14 }, { wch: 10 },
-    { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 9 }, { wch: 12 }, { wch: 12 }, { wch: 18 }
-  ];
-  wsDetalle['!autofilter'] = { ref: XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:rows.length,c:12} }) };
+  wsDetalle['!cols'] = esPapeleria
+    ? [
+        { wch: 16 }, { wch: 40 }, { wch: 8 }, { wch: 14 }, { wch: 14 }, { wch: 10 },
+        { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 9 }, { wch: 12 }, { wch: 12 }, { wch: 18 }
+      ]
+    : [
+        { wch: 16 }, { wch: 40 }, { wch: 8 }, { wch: 14 }, { wch: 14 }, { wch: 10 },
+        { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 9 }, { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 60 }
+      ];
+  wsDetalle['!autofilter'] = { ref: XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:rows.length,c: esPapeleria ? 12 : 13} }) };
   XLSX.utils.book_append_sheet(wb, wsDetalle, 'Detalle');
 
   const nombreArchivo = `Reporte_${esPapeleria ? 'FisicoPapeleria' : 'FisicoSistema'}_${_areaFileTag()}_${_fechaCortaTag()}_CONTEO.PT.xlsx`;
@@ -12171,21 +12181,70 @@ function _categoriaDesdeProducto(g) {
   return (prefijo2da + partes.join(' ')).trim() || '—';
 }
 
-// Arma el texto de Justificación combinando 👽 Pendientes + 📌 Seguimiento.
+// Convierte un texto de fecha (dd/mm/yyyy, dd-mm-yyyy, yyyy-mm-dd, u otros formatos
+// que Date entienda) a un objeto Date. Devuelve null si no puede interpretarlo.
+function _parseFechaFlexible(fechaStr) {
+  if (!fechaStr) return null;
+  const s = String(fechaStr).trim();
+  // dd/mm/yyyy o dd-mm-yyyy (con hora opcional al final, se ignora)
+  let m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if (m) {
+    let [, d, mo, y] = m;
+    if (y.length === 2) y = '20' + y;
+    const dt = new Date(Number(y), Number(mo) - 1, Number(d));
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+  // yyyy-mm-dd
+  m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) {
+    const [, y, mo, d] = m;
+    const dt = new Date(Number(y), Number(mo) - 1, Number(d));
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+  // último recurso: dejar que el motor lo intente
+  const dt = new Date(s);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+
+// Días transcurridos desde una fecha hasta hoy (0 si es hoy mismo). null si no se pudo interpretar.
+function _diasTranscurridos(fechaStr) {
+  const dt = _parseFechaFlexible(fechaStr);
+  if (!dt) return null;
+  const hoy = new Date();
+  const d1 = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  const d2 = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  return Math.round((d2 - d1) / 86400000);
+}
+
+// Arma el texto de Justificación combinando 👽 Movimientos Pendientes (ledger
+// window._movimientosOdoo, el mismo que usa la vista de Auditoría) + 📌 Seguimiento.
+// Un movimiento del ledger se considera pendiente cuando f.estado === 1.
+// Si el movimiento tiene un comentario (💬 agregado desde Auditoría) se agrega junto a él,
+// además de los días transcurridos desde la fecha de la operación.
 // Devuelve '' (vacío) si el código no tiene nada en ninguna de las 2 fuentes.
 function _justificacionParaCodigo(g) {
   const partes = [];
 
-  // ── 👽 Movimientos Pendientes ──
-  (g.moDetalle || []).forEach(d => { if (d.valor) partes.push(`Pendiente MO/${d.numero} (+${d.valor.toLocaleString('es-GT')})`); });
-  (g.sroDetalle || []).forEach(d => { if (d.valor) partes.push(`Pendiente SRO/${d.numero} (${d.valor > 0 ? '+' : ''}${d.valor.toLocaleString('es-GT')})`); });
-  (g.soDetalle || []).forEach(d => { if (d.valor) partes.push(`Pendiente SO/${d.numero} (${d.valor > 0 ? '+' : ''}${d.valor.toLocaleString('es-GT')})`); });
-  (g.ajusteDetalle || []).forEach(d => { if (d.valor) partes.push(`Pendiente AJUSTE/${d.numero} (${d.valor > 0 ? '+' : ''}${d.valor.toLocaleString('es-GT')})`); });
+  // ── 👽 Movimientos Pendientes (ledger de Auditoría) ──
+  const movs = window._movimientosOdoo?.[g.codigo] || [];
+  movs.forEach(f => {
+    if (f.estado !== 1) return; // solo movimientos pendientes
+    const cant = f.tipo === 'Entrada' ? f.entradas : f.salidas;
+    const cantTxt = (cant !== '' && cant != null) ? Number(cant).toLocaleString('es-GT') : '—';
+    const dias = _diasTranscurridos(f.fecha);
+    const diasTxt = dias !== null ? ` · ${dias} día${dias === 1 ? '' : 's'}` : '';
+    let texto = `Pendiente ${f.tipo || '—'} ${f.referencia || '—'} (${cantTxt})${f.fecha ? ' · ' + f.fecha : ''}${diasTxt}`;
+    const comentarioTxt = (f.comentario || f.auditoriaComentario || '').trim();
+    if (comentarioTxt) texto += ` — 💬 ${comentarioTxt}`;
+    partes.push(texto);
+  });
 
   // ── 📌 Seguimiento ──
   const notasSeg = window._seguimientosMov?.[g.codigo] || [];
   notasSeg.forEach(n => {
-    partes.push(`En seguimiento: ${n.referencia || ''}${n.fecha ? ' (' + n.fecha + ')' : ''}`.trim());
+    const dias = _diasTranscurridos(n.fecha);
+    const diasTxt = dias !== null ? ` · ${dias} día${dias === 1 ? '' : 's'}` : '';
+    partes.push(`En seguimiento: ${n.referencia || ''}${n.fecha ? ' (' + n.fecha + ')' : ''}${diasTxt}`.trim());
   });
 
   return partes.join(' | ');
@@ -12229,7 +12288,7 @@ function generarReporteJustificacion() {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'justificado');
-  XLSX.writeFile(wb, `Justificacion_${_areaFileTag()}_${ts()}.xlsx`);
+  XLSX.writeFile(wb, `Justificacion_Inventario_${_areaFileTag()}_${_fechaCortaTag()}_CONTEO.PT.xlsx`);
   showToast('📋', `Reporte de Justificación generado (${filas.length} códigos)`);
 }
 
@@ -27482,6 +27541,93 @@ async function guardarMovimientosOdoo() {
   }
 }
 
+// ══════════════════════════════════════════════════════
+//  REGISTRAR MOVIMIENTO — alta manual de UNA fila, se agrega
+//  al final del historial de "Ver movimientos" (mismo flujo/shape
+//  que usan las filas parseadas desde Odoo/Excel).
+// ══════════════════════════════════════════════════════
+let _regMovTipo = null;
+
+function abrirRegistrarMovimientoManual() {
+  document.getElementById('regMovCodigo').textContent = _movOdooCodigoActual;
+  document.getElementById('regMovFecha').value = new Date().toLocaleDateString('es-GT');
+  document.getElementById('regMovReferencia').value = '';
+  document.getElementById('regMovCantidad').value = '';
+  document.getElementById('regMovMsg').textContent = '';
+  _regMovTipo = null;
+  _regMovActualizarBotonesTipo();
+  document.getElementById('modalRegistrarMovimientoManual').classList.add('open');
+  setTimeout(() => document.getElementById('regMovReferencia').focus(), 150);
+}
+
+function cerrarRegistrarMovimientoManual() {
+  document.getElementById('modalRegistrarMovimientoManual').classList.remove('open');
+}
+
+function _regMovSetTipo(tipo) {
+  _regMovTipo = tipo;
+  _regMovActualizarBotonesTipo();
+}
+
+function _regMovActualizarBotonesTipo() {
+  const btnEntrada = document.getElementById('regMovBtnEntrada');
+  const btnSalida  = document.getElementById('regMovBtnSalida');
+  btnEntrada.className = 'q-btn' + (_regMovTipo === 'Entrada' ? ' active-general' : '');
+  btnSalida.className  = 'q-btn' + (_regMovTipo === 'Salida'  ? ' active-1ra'     : '');
+}
+
+async function guardarRegistrarMovimientoManual() {
+  const msg = document.getElementById('regMovMsg');
+  msg.textContent = '';
+
+  const codigo    = _movOdooCodigoActual;
+  const fecha     = document.getElementById('regMovFecha').value.trim();
+  const referencia = document.getElementById('regMovReferencia').value.trim();
+  const cantidadRaw = document.getElementById('regMovCantidad').value.trim();
+  const cantidad  = parseFloat(String(cantidadRaw).replace(/,/g, ''));
+
+  if (!referencia)               { msg.textContent = '⚠️ Ingresa la referencia'; return; }
+  if (!_regMovTipo)               { msg.textContent = '⚠️ Selecciona Entrada o Salida'; return; }
+  if (!cantidadRaw || isNaN(cantidad) || cantidad <= 0) { msg.textContent = '⚠️ Ingresa una cantidad válida'; return; }
+  if (!window.fbDb)               { msg.textContent = '⚠️ Sin conexión a Firebase'; return; }
+
+  const existentes = window._movimientosOdoo[codigo] || [];
+  const ultimoSaldo = existentes.length ? Number(existentes[existentes.length - 1].saldo || 0) : 0;
+  const nuevoSaldo  = _regMovTipo === 'Entrada' ? ultimoSaldo + cantidad : ultimoSaldo - cantidad;
+
+  const nuevaFila = {
+    fecha,
+    referencia,
+    obs: '',
+    tipo: _regMovTipo,
+    entradas: _regMovTipo === 'Entrada' ? cantidad : '',
+    salidas:  _regMovTipo === 'Salida'  ? cantidad : '',
+    origen: '',
+    produccion: '',
+    saldo: nuevoSaldo,
+    estado: 2, // ✅ Completada por defecto
+  };
+
+  const btn = document.querySelector('#modalRegistrarMovimientoManual .btn-primary');
+  btn.disabled = true;
+  btn.textContent = '⏳ Guardando...';
+
+  try {
+    const nuevas = [...existentes, nuevaFila];
+    await colArea('movimientosOdoo').doc(codigo).set({ filas: nuevas });
+    window._movimientosOdoo[codigo] = nuevas;
+    showToast('👽', 'Movimiento registrado');
+    cerrarRegistrarMovimientoManual();
+    _movOdooRenderVer();
+  } catch(err) {
+    msg.textContent = '⚠️ Error al guardar: ' + err.message;
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Guardar';
+  }
+}
+
 // Exponer funciones al scope global
 window.abrirMovimientosOdoo   = abrirMovimientosOdoo;
 window.cerrarMovimientosOdoo  = cerrarMovimientosOdoo;
@@ -27497,6 +27643,10 @@ window._movOdooCerrarComentario  = _movOdooCerrarComentario;
 window._movOdooGuardarComentario = _movOdooGuardarComentario;
 window.parsearPegadoOdoo      = parsearPegadoOdoo;
 window.guardarMovimientosOdoo = guardarMovimientosOdoo;
+window.abrirRegistrarMovimientoManual  = abrirRegistrarMovimientoManual;
+window.cerrarRegistrarMovimientoManual = cerrarRegistrarMovimientoManual;
+window._regMovSetTipo            = _regMovSetTipo;
+window.guardarRegistrarMovimientoManual = guardarRegistrarMovimientoManual;
 
 // ══════════════════════════════
 //  CHAT DEL EQUIPO
@@ -28970,7 +29120,10 @@ renderConexionEstado();
 
       <!-- Panel VER -->
       <div id="movOdooPanelVer">
-        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.75rem" id="movOdooVerCount"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:0.75rem">
+          <div style="font-size:0.75rem;color:var(--muted)" id="movOdooVerCount"></div>
+          <button class="btn btn-primary btn-sm" onclick="abrirRegistrarMovimientoManual()" style="width:auto;padding:6px 14px;font-size:0.78rem">➕ Registrar movimiento</button>
+        </div>
         <div class="mov-tabla-wrap">
           <table class="mov-tabla">
             <thead>
@@ -29045,6 +29198,53 @@ renderConexionEstado();
       </div>
 
     </div><!-- /mov-body -->
+  </div>
+</div>
+
+<!-- MODAL: Registrar Movimiento manual — se agrega al final del historial de "Ver movimientos" -->
+<div class="modal-overlay" id="modalRegistrarMovimientoManual" style="z-index:370" onclick="if(event.target===this)cerrarRegistrarMovimientoManual()">
+  <div class="modal">
+    <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1.1rem">
+      <span style="font-size:1.7rem;line-height:1">👽</span>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.15rem;text-transform:uppercase;letter-spacing:0.04em">Registrar Movimiento</div>
+    </div>
+
+    <div style="font-size:0.85rem;color:var(--muted);margin-bottom:2px">Código</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;color:var(--accent);margin-bottom:1rem" id="regMovCodigo"></div>
+
+    <div class="field">
+      <label>Fecha</label>
+      <input type="text" autocapitalize="off" id="regMovFecha" placeholder="dd/mm/aaaa" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label>Referencia</label>
+      <input type="text" autocapitalize="off" id="regMovReferencia" placeholder="Ej. BSM/MO/08010" autocomplete="off"
+        oninput="const s=this.selectionStart,e=this.selectionEnd;this.value=this.value.toUpperCase();this.setSelectionRange(s,e);">
+    </div>
+
+    <div class="field">
+      <label>Tipo</label>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="q-btn" id="regMovBtnEntrada" onclick="_regMovSetTipo('Entrada')" style="flex:1">📥 Entrada</button>
+        <button type="button" class="q-btn" id="regMovBtnSalida" onclick="_regMovSetTipo('Salida')" style="flex:1">📤 Salida</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Cantidad</label>
+      <input type="text" autocapitalize="off" id="regMovCantidad" placeholder="0" inputmode="numeric" autocomplete="off"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();guardarRegistrarMovimientoManual();}">
+    </div>
+
+    <div style="font-size:0.78rem;color:var(--muted);margin-bottom:0.5rem">Estado: <span style="color:var(--success);font-weight:700">✅ Completada</span> (por defecto)</div>
+
+    <div id="regMovMsg" style="font-size:0.82rem;color:var(--danger);min-height:1.2em;margin-bottom:0.5rem"></div>
+
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="cerrarRegistrarMovimientoManual()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarRegistrarMovimientoManual()">💾 Guardar</button>
+    </div>
   </div>
 </div>
 
