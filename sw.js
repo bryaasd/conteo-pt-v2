@@ -1,3 +1,10 @@
+// ── Conteo PT — Service Worker v4.79.1 ─────────────────────────────────────
+// Cambios v4.79.1 (Alertas 🚨 — ajuste):
+//   · MEJORADO — Overlay verde de éxito al guardar una alerta ("¡Alerta
+//     guardada!"): ahora permanece 2 segundos en pantalla (antes 0.9s),
+//     dando tiempo a leerlo antes de que aparezca el aviso emergente.
+//
+
 // ── Conteo PT — Service Worker v4.79.0 ─────────────────────────────────────
 // Cambios v4.79.0 (Alertas 🚨 — mejoras):
 //   · NUEVO — Tarjeta "🚨 Reporte de Alertas" en la pantalla de selección de
@@ -1894,7 +1901,7 @@
 //   · Firebase Storage habilitado: se agrega el SDK firebase-storage-compat
 //     v9.23.0, html2canvas v1.4.1 y jsPDF v2.5.1 como dependencias externas.
 
-const CACHE_NAME = 'conteo-pt-v4.79.0';
+const CACHE_NAME = 'conteo-pt-v4.79.1';
 
 const ASSETS = [
   './',
