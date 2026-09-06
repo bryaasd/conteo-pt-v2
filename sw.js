@@ -1,97 +1,31 @@
-// ── Conteo PT — Service Worker v4.82.0 ─────────────────────────────────────
-// Cambios v4.82.0 (Resumen/Auditoría — Justificación y registro manual):
-//   · CORREGIDO — Botón "General" de la pestaña Conteo no reaccionaba al
-//     tocarlo: faltaba declarar la variable que controla el desbloqueo por
-//     PIN, así que el script se detenía en silencio antes de pedirlo.
-//   · NUEVO — Columna "JUSTIFICACION" en el reporte de Auditoría y en la
-//     hoja "Detalle" del Reporte Excel de Resumen (solo en la vista Físico
-//     vs Sistema, no en Papelería): junta todos los movimientos pendientes
-//     del código (ledger 👽), su comentario si lo tiene y los días
-//     transcurridos desde la fecha de cada operación.
-//   · RENOMBRADO — El archivo del reporte de Auditoría pasa de
-//     "Justificacion_<área>_<fecha-hora>.xlsx" a
-//     "Justificacion_Inventario_<área>_dd.mm.aaaa_CONTEO.PT.xlsx", con el
-//     mismo formato que el resto de reportes descargables.
-//   · NUEVO — Modal 👽 (Movimientos Odoo), pestaña "Ver movimientos": botón
-//     "➕ Registrar movimiento" para dar de alta una sola fila manual (fecha
-//     por defecto hoy, referencia, Entrada/Salida + cantidad, estado fijo
-//     en ✅ Completada) sin pegar datos desde Excel/Odoo. Se agrega al final
-//     del historial y el saldo se calcula a partir del último movimiento
-//     existente, igual que el resto del flujo.
-//
-
-// ── Conteo PT — Service Worker v4.81.0 ─────────────────────────────────────
-// Cambios v4.81.0 (buscadores de Conteo/MO/SRO/BNC/regAgr — paridad con Mapa):
-//   · CORREGIDO — El buscador de Conteo no filtraba por la Calidad (1RA/2DA)
-//     seleccionada, a diferencia de MO/SRO/BNC que sí lo hacían.
-//   · NUEVO — Al cambiar Calidad en Conteo con un producto ya elegido, ahora
-//     busca y aplica automáticamente su equivalente en la nueva calidad
-//     (mismo código, con o sin el prefijo "2-"); si no existe, limpia la
-//     selección en vez de dejar puesto el producto de la calidad anterior.
-//   · CORREGIDO — Unificada la lógica de comparación de texto de los
-//     buscadores de Conteo/MO/SRO/BNC/regAgr con la que ya usaban Ficha
-//     Digital (Mapa) y Despachos: un número entero (ej. "6") ahora compara
-//     por valor exacto contra el texto, para que ya no encuentre "16 pies"
-//     al buscar "6"; además, se exige que todas las palabras coincidan en
-//     la descripción, o que todas coincidan en el código (antes se
-//     mezclaban ambos criterios palabra por palabra).
-//   · CORREGIDO — Los botones 1RA/2DA de Conteo/MO/SRO/BNC/regAgr no
-//     refrescaban la lista de resultados ya mostrada al tocarlos (Despachos
-//     y Ficha Digital sí lo hacían) — ahora los 5 vuelven a ejecutar la
-//     búsqueda en vivo al cambiar de calidad, igual que el buscador del
-//     Mapa.
-//
-
-// ── Conteo PT — Service Worker v4.80.0 ─────────────────────────────────────
-// Cambios v4.80.0 (rediseño grande de Tabla PT + migración de Firebase):
-//   · QUITADOS — Selectores en cascada (Calidad→Material→Tipo→Medida→
-//     Espesor) en Conteo, Entrada (MO), Salidas (SRO), BNC, el modal
-//     "Agregar producto a MO/SRO" y el modo tradicional de Despachos —
-//     ahora solo queda el buscador en vivo (código o descripción) en
-//     todos ellos, igual al que ya usaba la Ficha Digital del Mapa. En
-//     MO/SRO/BNC/regAgr y Conteo, Calidad queda preseleccionada en 1RA
-//     por defecto.
-//   · REDISEÑO — Tabla PT ya no es una colección propia por área con
-//     Tipo/Material/Medida/Pies/Espesor capturados a mano: ahora se
-//     alimenta directo de la Base Odoo (referencia), que pasa a ser la
-//     única fuente de productos de todo el sistema. Se mantienen como
-//     campos reales Color, Peso (Kg/U, 3 decimales) y Unidades/Atado;
-//     Tipo/Material/Medida/Pies/Espesor/Calidad se derivan automáticamente
-//     de la descripción y el código, solo para uso interno (Resumen,
-//     reportes) — ya no se capturan ni se muestran como columnas. Se
-//     eliminó el Código Corto por completo.
-//   · NUEVO — Cada código de la Base Odoo se clasifica automáticamente por
-//     Área (Tubería/Costanera/Lámina/Tiras-Bobinas/Insumos) según palabra
-//     clave en la descripción, editable directo en la tabla si la
-//     detección se equivoca. "Insumos" es una etiqueta para lo que no es
-//     material de PT (pintura, guantes, herramientas, etc.) — no tiene
-//     pestañas propias ni aparece en el login.
-//   · NUEVO — Botón "📥 Importar catálogo (Excel)" en Tabla PT: carga
-//     código+descripción+peso desde un Excel tipo Quants de Odoo, solo
-//     agrega códigos nuevos, nunca pisa los existentes.
-//   · NUEVO — Botón "🗑 Eliminar todo" en Tabla PT (protegido con PIN):
-//     borra todos los códigos de la Base Odoo, de todas las áreas a la
-//     vez. Color y Peso/U-Atado ahora se editan con un botón que abre un
-//     modal dedicado, en vez de campos libres directo en la tabla.
-//   · MEJORADO — Varios ajustes de legibilidad en la tabla de Tabla PT:
-//     columnas mejor distribuidas (Código/Descripción/Área ya no se
-//     encimaban en pantallas angostas), U/Atado y Kg/U centrados, Color
-//     pasó de select desplegable a modal con grilla de opciones.
-//   · CORREGIDO — Varios casos reales del parser que deriva Tipo/Material
-//     desde la descripción de Odoo: no reconocía "Galv." abreviado, no
-//     tenía rama para "Bobina" (solo "Tira"), solo aceptaba género
-//     femenino "Roja/Blanca" cuando las descripciones usan mayormente
-//     masculino "Rojo/Blanco", no reconocía "Liso Cerca" ni "Mecánico"
-//     (solo "Proceso"), y la familia Lisa nunca extraía la Medida. Tubo
-//     sin material especificado y Lisa Fría ahora asumen Negro/Galvanizado
-//     por defecto respectivamente, según patrón real del catálogo.
-//   · MIGRACIÓN — El proyecto de Firebase cambió de `conteo-pt` a
-//     `condor-pt-v2` (Firestore + Storage nuevos, ambos en modo
-//     producción) por motivos de seguridad — las copias de la app ya
-//     instaladas fuera del equipo actual quedan con acceso cortado al
-//     apuntar al proyecto viejo, sin datos nuevos visibles de ahí en más.
-//     Las 3 Cloud Functions de IA (escaneo de despacho/torres/tiras) se
-//     dejaron por ahora en el proyecto viejo, sin migrar.
+// ── Conteo PT — Service Worker v4.79.0 ─────────────────────────────────────
+// Cambios v4.79.0 (Alertas 🚨 — mejoras):
+//   · NUEVO — Tarjeta "🚨 Reporte de Alertas" en la pantalla de selección de
+//     perfil (login): abre el formulario de alerta directamente, sin pedir
+//     PIN. La tarjeta de Transporte se retiró de esa pantalla (su perfil y
+//     lógica interna quedan intactos, solo dejó de ser accesible desde ahí).
+//   · NUEVO — Campo "Turno" (obligatorio) en el modal de Reportar Alerta,
+//     con botón cíclico Turno 1 (azul) / Turno 2 (morado), igual estilo que
+//     el resto de la app.
+//   · NUEVO — Campo "Nombre" ahora se llena solo desde una lista
+//     seleccionable (ya no se puede escribir libremente): botón para elegir
+//     un nombre, con buscador, y opciones para agregar o eliminar nombres de
+//     la lista (persistente en el dispositivo), ambas protegidas con código
+//     de confirmación.
+//   · NUEVO — Análisis General con gráficas en el Reporte Interactivo y en
+//     el PDF de Alertas: incidencias por área, por turno, top de personas
+//     que reportan (agrupando variantes del mismo nombre) y tendencia en el
+//     tiempo.
+//   · NUEVO — Tocar cualquier foto (ya subida o recién agregada) dentro del
+//     modal de Reportar Alerta la abre ampliada.
+//   · MEJORADO — El nombre de quien reporta se guarda con formato de nombre
+//     propio (primera letra de cada palabra en mayúscula).
+//   · CORREGIDO — Las tarjetas de alerta ya no se cortan entre páginas al
+//     imprimir/generar el PDF; se agregó impresión forzada de colores de
+//     fondo para que las barras de las gráficas sí se vean en el PDF.
+//   · CORREGIDO — Overlay de guardado con rueda girando (antes solo texto),
+//     y orden correcto de mensajes al guardar (overlay de éxito primero,
+//     luego el aviso emergente) para que no se tapen entre sí.
 //
 
 // ── Conteo PT — Service Worker v4.78.0 ─────────────────────────────────────
@@ -1949,7 +1883,7 @@
 //   · Firebase Storage habilitado: se agrega el SDK firebase-storage-compat
 //     v9.23.0, html2canvas v1.4.1 y jsPDF v2.5.1 como dependencias externas.
 
-const CACHE_NAME = 'conteo-pt-v4.82.0';
+const CACHE_NAME = 'conteo-pt-v4.79.0';
 
 const ASSETS = [
   './',

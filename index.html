@@ -838,12 +838,6 @@
 
   .bd-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; min-width: 760px; }
 
-  /* Tabla PT (#bdTable) usa anchos fijos por columna (colgroup) — solo afecta a
-     esta tabla, no a la clase .bd-table compartida por Resumen/BNC/Odoo/Despachos */
-  #bdTable { min-width: 1280px; table-layout: fixed; }
-  #bdTable td, #bdTable th { overflow: hidden; text-overflow: ellipsis; }
-  #bdTable td:nth-child(2) { white-space: normal; word-break: break-word; overflow: visible; text-overflow: clip; }
-
   .bd-table th {
     background: var(--surface2);
     color: var(--muted);
@@ -1291,6 +1285,8 @@
   }
 
   .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.toast-center { top: 50%; left: 50%; right: auto; bottom: auto; transform: translate(-50%,-50%) scale(0.9); }
+  .toast.toast-center.show { transform: translate(-50%,-50%) scale(1); }
   .toast-msg { font-size: 0.87rem; font-weight: 500; }
 
   /* ── Contenedor apilable de burbujas de mensaje nuevo (Chat de equipo) — máx. 3 ── */
@@ -2282,7 +2278,7 @@
       <div style="font-family:'Barlow',sans-serif;font-weight:600;font-size:2.2rem;letter-spacing:0.01em;line-height:1.1">Conteo <span style="color:var(--accent)">PT</span></div>
       <div style="font-size:1.05rem;font-weight:400;color:var(--text);margin-top:0.5rem;font-family:'Barlow',sans-serif">Selecciona tu perfil para continuar</div>
       <div id="loginFechaHoy" style="font-size:0.88rem;color:var(--muted);margin-top:0.6rem;font-weight:400;letter-spacing:0.02em;font-family:'Barlow',sans-serif"></div>
-      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;letter-spacing:0.02em;font-family:'Barlow',sans-serif">Versión del sistema <span style="color:var(--accent);font-weight:500">v4.81.0</span></div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;letter-spacing:0.02em;font-family:'Barlow',sans-serif">Versión del sistema <span style="color:var(--accent);font-weight:500">v4.79.0</span></div>
       <div style="margin-top:0.85rem;display:inline-block;padding:6px 18px;border-radius:30px;background:linear-gradient(90deg,rgba(245,158,11,0.16),rgba(249,115,22,0.16));border:1px solid rgba(245,158,11,0.35)">
         <span style="font-family:'Barlow',sans-serif;font-weight:500;font-size:0.95rem;letter-spacing:0.04em;color:var(--accent)">💛 mari29.05.1961</span>
       </div>
@@ -2368,10 +2364,14 @@
         <div style="font-size:2rem;line-height:1;margin-bottom:0.5rem" aria-hidden="true">📦</div>
         <div style="font-family:'Barlow',sans-serif;font-weight:500;font-size:0.92rem;letter-spacing:0.01em;line-height:1.3;color:var(--text)">Verificador<br>Operaciones</div>
       </div>
-      <div id="cardTransporte" onclick="seleccionarPerfil('transporte')"
-        style="border:2px solid var(--border);border-radius:12px;padding:1.1rem 0.3rem;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--surface2);user-select:none;-webkit-tap-highlight-color:transparent">
+      <div id="cardTransporte" onclick="seleccionarPerfil('transporte')" style="display:none;border:2px solid var(--border);border-radius:12px;padding:1.1rem 0.3rem;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--surface2);user-select:none;-webkit-tap-highlight-color:transparent">
         <div style="font-size:2rem;line-height:1;margin-bottom:0.5rem" aria-hidden="true">🚛</div>
         <div style="font-family:'Barlow',sans-serif;font-weight:500;font-size:0.92rem;letter-spacing:0.01em;line-height:1.3;color:var(--text)">Transporte</div>
+      </div>
+      <div id="cardReporteAlerta" onclick="abrirModalAlerta()"
+        style="border:2px solid var(--border);border-radius:12px;padding:1.1rem 0.3rem;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--surface2);user-select:none;-webkit-tap-highlight-color:transparent">
+        <div style="font-size:2rem;line-height:1;margin-bottom:0.5rem" aria-hidden="true">🚨</div>
+        <div style="font-family:'Barlow',sans-serif;font-weight:500;font-size:0.92rem;letter-spacing:0.01em;line-height:1.3;color:var(--text)">Reporte de<br>Alertas</div>
       </div>
     </div>
 
@@ -2534,14 +2534,6 @@
             <div id="parcialLineasList"></div>
           </div>
 
-          <div class="field">
-            <label>Calidad <span class="req">*</span></label>
-            <div class="quality-toggle">
-              <button class="q-btn active-1ra" id="btn1ra" onclick="setCalidad('1RA CALIDAD')">⭐ 1RA</button>
-              <button class="q-btn" id="btn2da" onclick="setCalidad('2DA CALIDAD')">2DA</button>
-            </div>
-          </div>
-
           <!-- Buscador de código (disponible en General y Parcial) — busca por código o descripción,
                igual funcionalidad que el buscador de la Ficha Digital (Mapa), pero independiente:
                busca contra la Tabla PT del área activa, no contra la Base Odoo (referencia). -->
@@ -2561,12 +2553,14 @@
             </label>
           </div>
 
-          <!-- Filtros en cascada (Material/Tipo/Medida/Pies/Espesor): reemplazados en la UI por el
-               buscador de arriba (conteoBuscador). Se mantienen ocultos en el DOM porque
-               _fillConteoFromProducto()/limpiarFormulario() los siguen usando internamente
-               (colores, badges, variables tipoTubo/materialTubo/medidaSel/piesSel/espesorSel)
-               para armar el registro que se guarda — quitarlos del DOM rompería esas funciones. -->
-          <div id="conteoFiltrosCascadaWrap" style="display:none">
+          <div class="field">
+            <label>Calidad <span class="req">*</span></label>
+            <div class="quality-toggle">
+              <button class="q-btn" id="btn1ra" onclick="setCalidad('1RA CALIDAD')">⭐ 1RA</button>
+              <button class="q-btn" id="btn2da" onclick="setCalidad('2DA CALIDAD')">2DA</button>
+            </div>
+          </div>
+
           <div class="field"><label>Material</label>
             <button type="button" class="cycle-btn" id="btnMaterialTubo" onclick="cycleMaterialTubo()">
               <span id="lblMaterialTubo">— Seleccionar —</span>
@@ -2596,7 +2590,6 @@
             <button type="button" class="cycle-btn" id="btnEspesor" onclick="cycleEspesor()" disabled>
               <span id="lblEspesor">— Seleccionar medida —</span>
             </button>
-          </div>
           </div>
 
           <div class="product-card" id="productCard">
@@ -2721,7 +2714,7 @@
       <h2>🗄 Tabla Productos (PT)</h2>
       <input type="text" autocapitalize="off" class="bd-search" id="bdSearch" placeholder="🔍 Buscar..." oninput="renderBD()">
       <span class="bd-count" id="bdCount">0 productos</span>
-      <button class="btn btn-primary btn-sm" onclick="pedirPinNormalizacion('Agregar códigos a Base Odoo', abrirModalOdooRefAgregar)" title="Agrega un código nuevo (código + descripción tal cual Odoo) a la Base Odoo unificada">+ Nuevo</button>
+      <button class="btn btn-primary btn-sm" onclick="openProductModal(null)">+ Nuevo</button>
       <button class="btn btn-ghost btn-sm" onclick="exportarTablaPT()" style="width:auto;padding:7px 14px;font-size:0.75rem" title="Descarga todos los códigos de Tabla PT en un Excel">📊 Exportar Excel</button>
       <button class="btn btn-ghost btn-sm" onclick="pedirPinNormalizacion('Normalizar espesores', migrarEspesorFirestore)" style="width:auto;padding:7px 14px;font-size:0.75rem" title="Normaliza el formato del campo espesor en toda la base de datos">🔧 Normalizar espesores</button>
       <button class="btn btn-ghost btn-sm" onclick="pedirPinNormalizacion('Normalizar medidas', migrarMedidaFirestore)" style="width:auto;padding:7px 14px;font-size:0.75rem" title="Normaliza el formato del campo medida en toda la base de datos">📐 Normalizar medidas</button>
@@ -2729,16 +2722,12 @@
       <button class="btn btn-ghost btn-sm" id="btnGenerarCodigosCortos" onclick="pedirPinNormalizacion('Generar códigos cortos', migrarCodigosCortosLamina)" style="width:auto;padding:7px 14px;font-size:0.75rem;display:none" title="Genera el Código Corto (ej. OG1, 2LA3) para los productos de Lámina que todavía no lo tengan">🔤 Generar códigos cortos</button>
       <button class="btn btn-ghost btn-sm" onclick="pedirPinNormalizacion('Capacidad de Bodega', abrirModalCapacidadBodega)" style="width:auto;padding:7px 14px;font-size:0.75rem" title="Ajusta manualmente la capacidad total (en toneladas) de la bodega del área activa">🏬 Capacidad de bodega</button>
       <button class="btn btn-ghost btn-sm" id="btnCargarBaseTiras" onclick="pedirPinNormalizacion('Cargar base Tiras de Bobinas', cargarBaseTirasBobinas)" style="width:auto;padding:7px 14px;font-size:0.75rem;display:none" title="Carga los 46 códigos base de Tiras de Bobinas extraídos del reporte de Odoo (Quants). Solo agrega los que todavía no existan.">📥 Cargar base Odoo (Tiras)</button>
-      <button class="btn btn-ghost btn-sm" style="width:auto;padding:7px 14px;font-size:0.75rem;display:none" title="Retirado — usar «➕ Agregar a Base Odoo» o «📥 Importar catálogo (Excel)»">📋 Pegar códigos nuevos</button>
-      <button class="btn btn-ghost btn-sm" style="width:auto;padding:7px 14px;font-size:0.75rem;display:none" title="Retirado — la descripción de la Tabla PT ya es siempre la de la Base Odoo">📝 Actualizar desc. desde Odoo</button>
+      <button class="btn btn-ghost btn-sm" onclick="pedirPinNormalizacion('Crear códigos pegando texto', abrirModalPegarCodigos)" style="width:auto;padding:7px 14px;font-size:0.75rem" title="Pega el texto de Odoo (una línea por código, formato &quot;[código] Descripción&quot;) y crea automáticamente los productos que falten en la Tabla PT de esta área">📋 Pegar códigos nuevos</button>
+      <button class="btn btn-ghost btn-sm" onclick="pedirPinNormalizacion('Actualizar descripciones desde Tabla PT Odoo', actualizarDescripcionesDesdeOdoo)" style="width:auto;padding:7px 14px;font-size:0.75rem" title="Revisa los productos de esta área (planta activa) y actualiza la Descripción con el texto exacto de la Base Odoo (referencia), para los códigos que coincidan. No toca los que no están en Tabla PT Odoo.">📝 Actualizar desc. desde Odoo</button>
       <button class="btn btn-ghost btn-sm" onclick="pedirPinNormalizacion('Base Odoo (referencia)', abrirModalOdooRef)" style="width:auto;padding:7px 14px;font-size:0.75rem" title="Tabla de referencia separada: código + descripción tal cual aparecen en Odoo, sin interpretar características. Se usa para verificar/precisar códigos (ej. en el escaneo con IA). Cada carga reemplaza la anterior.">🗂 Base Odoo (referencia) <span id="odooRefBadge" style="opacity:0.7"></span></button>
       <button class="btn btn-ghost btn-sm" onclick="pedirPinNormalizacion('Agregar códigos a Base Odoo', abrirModalOdooRefAgregar)" style="width:auto;padding:7px 14px;font-size:0.75rem" title="Suma códigos nuevos a la Base Odoo (referencia) sin borrar los que ya existen. Si un código pegado ya existe con otra descripción, pregunta antes de reemplazarlo.">➕ Agregar a Base Odoo</button>
       <button class="btn btn-ghost btn-sm" onclick="abrirModalVerOdooRef()" style="width:auto;padding:7px 14px;font-size:0.75rem" title="Ver/buscar los códigos cargados en la Base Odoo (referencia)">👁 Ver</button>
-      <label class="btn btn-ghost btn-sm" style="width:auto;padding:7px 14px;font-size:0.75rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px" title="Carga un Excel con columnas Producto (formato &quot;[código] Descripción&quot;) y Peso — crea los códigos nuevos en la Base Odoo (referencia) con su peso; los que ya existan no se tocan.">
-        📥 Importar catálogo (Excel)
-        <input type="file" accept=".xlsx,.xls" style="display:none" onchange="pedirPinNormalizacion('Importar catálogo desde Excel', () => importarCatalogoOdooExcel(event))">
-      </label>
-      <button class="btn btn-ghost btn-sm" onclick="eliminarTodaBaseOdoo()" style="width:auto;padding:7px 14px;font-size:0.75rem;color:var(--danger);border-color:rgba(239,68,68,0.35)" title="Elimina TODOS los códigos de la Base Odoo — de todas las áreas (Tubería, Costanera, Lámina, Tiras/Bobinas, Insumos). No se puede deshacer.">🗑 Eliminar todo</button>
+      
     </div>
 
     <!-- ── BD Chip Filters ── -->
@@ -2790,25 +2779,20 @@
 
     <div class="bd-table-wrap">
       <table class="bd-table" id="bdTable">
-        <colgroup>
-          <col style="width:110px">
-          <col style="width:370px">
-          <col style="width:130px">
-          <col style="width:160px">
-          <col style="width:100px">
-          <col style="width:110px">
-          <col style="width:110px">
-          <col style="width:190px">
-        </colgroup>
         <thead>
           <tr>
-            <th onclick="sortBD('codigo')">Código ⇅</th>
-            <th>Descripción</th>
-            <th style="text-align:center">Área</th>
-            <th style="text-align:center">Color</th>
-            <th onclick="sortBD('uAtado')" style="text-align:center">U/Atado ⇅</th>
-            <th onclick="sortBD('pesoKg')" style="text-align:center">Kg/U ⇅</th>
-            <th style="text-align:center">Kg/Atado</th>
+            <th onclick="sortBD('cal')">Calidad ⇅</th>
+            <th onclick="sortBD('tipo')">Tipo ⇅</th>
+            <th onclick="sortBD('mat')">Material ⇅</th>
+            <th onclick="sortBD('medida')">Medida ⇅</th>
+            <th onclick="sortBD('pies')" id="thBdPies" class="col-pies">Pies ⇅</th>
+            <th onclick="sortBD('espesor')">Espesor ⇅</th>
+            <th>Color</th>
+            <th onclick="sortBD('uAtado')">U/Atado ⇅</th>
+            <th onclick="sortBD('pesoKg')">Kg/U ⇅</th>
+            <th>Kg/Atado</th>
+            <th>Código</th>
+            <th onclick="sortBD('codigoCorto')" id="thBdCorto" class="col-pies">Cód. Corto ⇅</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -3174,32 +3158,30 @@
           <div style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px 12px;margin-bottom:0.75rem">
             <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">➕ Agregar producto</div>
 
-            <!-- Calidad primero (1RA por defecto) — filtra el buscador de abajo -->
+            <!-- Código rápido -->
+            <div class="field" style="margin-bottom:10px">
+              <label>Código rápido</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <input type="text" autocapitalize="off" id="moCodigoRapido" placeholder="ej: 101-1½x1.2" autocomplete="off"
+                  style="flex:1;background:var(--bg);border:2px solid rgba(245,158,11,0.4);border-radius:8px;color:var(--text);padding:8px 12px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700"
+                  oninput="const s=this.selectionStart,e=this.selectionEnd;this.value=this.value.toUpperCase();this.setSelectionRange(s,e);"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();autoFillDesdeCodigo('mo')}">
+                <button onclick="autoFillDesdeCodigo('mo')" title="Buscar código"
+                  style="padding:8px 12px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);border-radius:8px;color:var(--accent);font-size:1rem;cursor:pointer;font-weight:700;white-space:nowrap">🔍</button>
+                <button onclick="limpiarCodigoRapido('mo')" title="Limpiar y desbloquear" id="moClearCodigo" style="display:none;padding:8px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:var(--danger);font-size:0.9rem;cursor:pointer">✕</button>
+              </div>
+              <div id="moCodigoRapidoMsg" style="font-size:0.72rem;margin-top:4px;display:none"></div>
+            </div>
+
+            <!-- Calidad primero, igual que SRO -->
             <div class="field">
               <label>Calidad <span class="req">*</span></label>
               <div class="quality-toggle">
-                <button class="q-btn active-1ra" id="moBtnCalidad1" onclick="setMoCalidad('1RA CALIDAD')">⭐ 1RA</button>
+                <button class="q-btn" id="moBtnCalidad1" onclick="setMoCalidad('1RA CALIDAD')">⭐ 1RA</button>
                 <button class="q-btn" id="moBtnCalidad2" onclick="setMoCalidad('2DA CALIDAD')">2DA</button>
               </div>
             </div>
 
-            <!-- Buscador en vivo (reemplaza Código rápido + filtros en cascada) -->
-            <div class="field" style="margin-bottom:10px">
-              <label>Buscar código o descripción</label>
-              <div style="display:flex;gap:6px">
-                <input type="text" autocapitalize="off" id="moBuscador" placeholder="ej. alu 0.20 galva ondu / código" autocomplete="off"
-                  oninput="moBuscarEnVivo()"
-                  style="flex:1;background:var(--bg);border:2px solid rgba(245,158,11,0.4);border-radius:8px;color:var(--text);padding:8px 12px;font-family:'Barlow',sans-serif;font-size:0.92rem">
-                <button onclick="limpiarCodigoRapido('mo')" title="Limpiar y desbloquear" id="moClearCodigo" style="display:none;padding:8px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:var(--danger);font-size:0.9rem;cursor:pointer">✕</button>
-              </div>
-              <div id="moBuscadorLista" style="max-height:34vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:6px"></div>
-              <div id="moCodigoRapidoMsg" style="font-size:0.72rem;margin-top:4px;display:none"></div>
-            </div>
-
-            <!-- Filtros en cascada — ocultos, ya no se usan en la UI. Se mantienen en el DOM porque
-                 _fillMoFromProducto() los sigue usando para armar el objeto producto internamente
-                 (evita reescribir toda la lógica de guardado). -->
-            <div id="moFiltrosCascadaWrap" style="display:none">
             <div class="field"><label>Material</label>
               <select id="moMaterial" onchange="onMoMaterialChange()" class="cycle-hidden-select"><option value="">— Seleccionar —</option></select>
               <button type="button" class="cycle-btn" id="btn_moMaterial" onclick="cycleSelect('moMaterial')"><span id="lbl_moMaterial">— Seleccionar —</span></button>
@@ -3219,7 +3201,6 @@
             <div class="field" id="field_moEspesor"><label>Espesor (MM)</label>
               <select id="moEspesor" onchange="onMoEspesorChange()" disabled class="cycle-hidden-select"><option value="">— Seleccionar medida —</option></select>
               <button type="button" class="cycle-btn" id="btn_moEspesor" onclick="cycleSelect('moEspesor')" disabled><span id="lbl_moEspesor">— Seleccionar medida —</span></button>
-            </div>
             </div>
             <div class="product-card" id="moProductCard">
               <div class="empty-hint">Seleccione los filtros para ver el producto</div>
@@ -3343,30 +3324,29 @@
           <div style="background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.25);border-radius:8px;padding:10px 12px;margin-bottom:0.75rem">
             <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#a855f7;margin-bottom:8px">➕ Agregar producto a BNC</div>
 
+            <!-- Código rápido -->
+            <div class="field" style="margin-bottom:10px">
+              <label>Código rápido</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <input type="text" autocapitalize="off" id="bncCodigoRapido" placeholder="ej: 101-1½x1.2" autocomplete="off"
+                  style="flex:1;background:var(--bg);border:2px solid rgba(168,85,247,0.4);border-radius:8px;color:var(--text);padding:8px 12px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700"
+                  oninput="const s=this.selectionStart,e=this.selectionEnd;this.value=this.value.toUpperCase();this.setSelectionRange(s,e);"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();autoFillBncCodigoRapido()}">
+                <button onclick="autoFillBncCodigoRapido()" title="Buscar código"
+                  style="padding:8px 12px;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.4);border-radius:8px;color:#a855f7;font-size:1rem;cursor:pointer;font-weight:700;white-space:nowrap">🔍</button>
+                <button onclick="limpiarBncCodigoRapido()" title="Limpiar y desbloquear" id="bncClearCodigo" style="display:none;padding:8px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:var(--danger);font-size:0.9rem;cursor:pointer">✕</button>
+              </div>
+              <div id="bncCodigoRapidoMsg" style="font-size:0.72rem;margin-top:4px;display:none"></div>
+            </div>
+
             <div class="field">
               <label>Calidad <span class="req">*</span></label>
               <div class="quality-toggle">
-                <button class="q-btn active-1ra" id="bncBtnCalidad1" onclick="setBncCalidad('1RA CALIDAD')">⭐ 1RA</button>
+                <button class="q-btn" id="bncBtnCalidad1" onclick="setBncCalidad('1RA CALIDAD')">⭐ 1RA</button>
                 <button class="q-btn" id="bncBtnCalidad2" onclick="setBncCalidad('2DA CALIDAD')">2DA</button>
               </div>
             </div>
 
-            <!-- Buscador en vivo (reemplaza Código rápido + filtros en cascada) -->
-            <div class="field" style="margin-bottom:10px">
-              <label>Buscar código o descripción</label>
-              <div style="display:flex;gap:6px">
-                <input type="text" autocapitalize="off" id="bncBuscador" placeholder="ej. alu 0.20 galva ondu / código" autocomplete="off"
-                  oninput="bncBuscarEnVivo()"
-                  style="flex:1;background:var(--bg);border:2px solid rgba(168,85,247,0.4);border-radius:8px;color:var(--text);padding:8px 12px;font-family:'Barlow',sans-serif;font-size:0.92rem">
-                <button onclick="limpiarBncCodigoRapido()" title="Limpiar y desbloquear" id="bncClearCodigo" style="display:none;padding:8px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:var(--danger);font-size:0.9rem;cursor:pointer">✕</button>
-              </div>
-              <div id="bncBuscadorLista" style="max-height:34vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:6px"></div>
-              <div id="bncCodigoRapidoMsg" style="font-size:0.72rem;margin-top:4px;display:none"></div>
-            </div>
-
-            <!-- Filtros en cascada — ocultos, ya no se usan en la UI. Se mantienen en el DOM porque
-                 _fillBncFromProducto() los sigue usando internamente. -->
-            <div id="bncFiltrosCascadaWrap" style="display:none">
             <div class="field"><label>Material</label>
               <select id="bncMaterial" onchange="onBncMaterialChange()" class="cycle-hidden-select"><option value="">— Seleccionar —</option></select>
               <button type="button" class="cycle-btn" id="btn_bncMaterial" onclick="cycleSelect('bncMaterial')"><span id="lbl_bncMaterial">— Seleccionar —</span></button>
@@ -3386,7 +3366,6 @@
             <div class="field" id="field_bncEspesor"><label>Espesor (MM)</label>
               <select id="bncEspesor" onchange="onBncEspesorChange()" disabled class="cycle-hidden-select"><option value="">— Seleccionar medida —</option></select>
               <button type="button" class="cycle-btn" id="btn_bncEspesor" onclick="cycleSelect('bncEspesor')" disabled><span id="lbl_bncEspesor">— Seleccionar medida —</span></button>
-            </div>
             </div>
             <div class="product-card" id="bncProductCard">
               <div class="empty-hint">Seleccione los filtros para ver el producto</div>
@@ -3988,30 +3967,29 @@
           <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 12px;margin-bottom:0.75rem">
             <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#f87171;margin-bottom:8px">➕ Agregar producto</div>
 
+            <!-- Código rápido -->
+            <div class="field" style="margin-bottom:10px">
+              <label>Código rápido</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <input type="text" autocapitalize="off" id="sroCodigoRapido" placeholder="ej: 101-1½x1.2" autocomplete="off"
+                  style="flex:1;background:var(--bg);border:2px solid rgba(239,68,68,0.4);border-radius:8px;color:var(--text);padding:8px 12px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700"
+                  oninput="const s=this.selectionStart,e=this.selectionEnd;this.value=this.value.toUpperCase();this.setSelectionRange(s,e);"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();autoFillDesdeCodigo('sro')}">
+                <button onclick="autoFillDesdeCodigo('sro')" title="Buscar código"
+                  style="padding:8px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);border-radius:8px;color:#f87171;font-size:1rem;cursor:pointer;font-weight:700;white-space:nowrap">🔍</button>
+                <button onclick="limpiarCodigoRapido('sro')" title="Limpiar y desbloquear" id="sroClearCodigo" style="display:none;padding:8px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:var(--danger);font-size:0.9rem;cursor:pointer">✕</button>
+              </div>
+              <div id="sroCodigoRapidoMsg" style="font-size:0.72rem;margin-top:4px;display:none"></div>
+            </div>
+
             <div class="field">
               <label>Calidad <span class="req">*</span></label>
               <div class="quality-toggle">
-                <button class="q-btn active-1ra" id="sroBtnCalidad1" onclick="setSroCalidad('1RA CALIDAD')">⭐ 1RA</button>
+                <button class="q-btn" id="sroBtnCalidad1" onclick="setSroCalidad('1RA CALIDAD')">⭐ 1RA</button>
                 <button class="q-btn" id="sroBtnCalidad2" onclick="setSroCalidad('2DA CALIDAD')">2DA</button>
               </div>
             </div>
 
-            <!-- Buscador en vivo (reemplaza Código rápido + filtros en cascada) -->
-            <div class="field" style="margin-bottom:10px">
-              <label>Buscar código o descripción</label>
-              <div style="display:flex;gap:6px">
-                <input type="text" autocapitalize="off" id="sroBuscador" placeholder="ej. alu 0.20 galva ondu / código" autocomplete="off"
-                  oninput="sroBuscarEnVivo()"
-                  style="flex:1;background:var(--bg);border:2px solid rgba(239,68,68,0.4);border-radius:8px;color:var(--text);padding:8px 12px;font-family:'Barlow',sans-serif;font-size:0.92rem">
-                <button onclick="limpiarCodigoRapido('sro')" title="Limpiar y desbloquear" id="sroClearCodigo" style="display:none;padding:8px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:var(--danger);font-size:0.9rem;cursor:pointer">✕</button>
-              </div>
-              <div id="sroBuscadorLista" style="max-height:34vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:6px"></div>
-              <div id="sroCodigoRapidoMsg" style="font-size:0.72rem;margin-top:4px;display:none"></div>
-            </div>
-
-            <!-- Filtros en cascada — ocultos, ya no se usan en la UI. Se mantienen en el DOM porque
-                 _fillSroFromProducto() los sigue usando internamente. -->
-            <div id="sroFiltrosCascadaWrap" style="display:none">
             <div class="field"><label>Material</label>
               <select id="sroMaterial" onchange="onSroMaterialChange()" class="cycle-hidden-select"><option value="">— Seleccionar —</option></select>
               <button type="button" class="cycle-btn" id="btn_sroMaterial" onclick="cycleSelect('sroMaterial')"><span id="lbl_sroMaterial">— Seleccionar —</span></button>
@@ -4031,7 +4009,6 @@
             <div class="field" id="field_sroEspesor"><label>Espesor (MM)</label>
               <select id="sroEspesor" onchange="onSroEspesorChange()" disabled class="cycle-hidden-select"><option value="">— Seleccionar medida —</option></select>
               <button type="button" class="cycle-btn" id="btn_sroEspesor" onclick="cycleSelect('sroEspesor')" disabled><span id="lbl_sroEspesor">— Seleccionar medida —</span></button>
-            </div>
             </div>
 
             <div class="product-card" id="sroProductCard">
@@ -4338,6 +4315,8 @@
     <div id="dFormAgregarWrap" style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px 12px;margin:0.9rem 0 0.75rem">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:0.75rem">
         <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent)">➕ Agregar Productos</div>
+        <button type="button" id="btnDModoToggle" onclick="dToggleModoTradicional()"
+          style="flex-shrink:0;padding:6px 11px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--accent2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.03em;cursor:pointer;white-space:nowrap">🔀 Forma tradicional</button>
       </div>
 
       <!-- Calidad toggle: además de mostrar la calidad del producto elegido, funciona como
@@ -4951,39 +4930,9 @@
   </div>
 </div>
 
-<!-- MODAL: Editar Peso (Kg/U) o Unidades/Atado de un código — sin PIN, reemplaza los
-     campos libres de la tabla de Tabla PT -->
-<!-- MODAL: Elegir Color de un código — reemplaza el select desplegable de la tabla -->
-<div class="modal-overlay" id="modalBdEditarColor" style="z-index:610" onclick="if(event.target===this)closeModal('modalBdEditarColor')">
-  <div class="modal" style="max-width:400px">
-    <h3>🎨 Color</h3>
-    <div style="text-align:center;font-size:0.85rem;color:var(--muted);margin-bottom:0.75rem" id="bdEditarColorCodigo"></div>
-    <div id="bdEditarColorLista" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:50vh;overflow-y:auto"></div>
-    <div class="modal-btns-1" style="margin-top:1rem">
-      <button class="btn btn-ghost" onclick="closeModal('modalBdEditarColor')">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modalBdEditarValor" style="z-index:610" onclick="if(event.target===this)closeModal('modalBdEditarValor')">
-  <div class="modal" style="max-width:360px">
-    <h3 id="bdEditarValorTitulo">Editar valor</h3>
-    <div style="text-align:center;font-size:0.85rem;color:var(--muted);margin-bottom:0.75rem" id="bdEditarValorCodigo"></div>
-    <div class="field">
-      <input type="number" id="bdEditarValorInput" inputmode="decimal"
-        style="width:100%;box-sizing:border-box;background:var(--bg);border:2px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;font-family:'Barlow',sans-serif;font-size:1.1rem;text-align:center"
-        onkeydown="if(event.key==='Enter'){event.preventDefault();guardarBdEditarValor();}">
-    </div>
-    <div class="modal-btns" style="grid-template-columns:1fr 1fr;margin-top:1rem">
-      <button class="btn btn-ghost" onclick="closeModal('modalBdEditarValor')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarBdEditarValor()">💾 Guardar</button>
-    </div>
-  </div>
-</div>
-
 <!-- Modal genérico de PIN — usado para borrados/ediciones puntuales (Conteo individual, MO/SRO item y grupo, productos PT) -->
 <!-- Modal genérico de confirmación (reemplaza al confirm() nativo del navegador) -->
-<div class="modal-overlay" id="appConfirmModal" style="z-index:600">
+<div class="modal-overlay" id="appConfirmModal" style="z-index:1200">
   <div class="modal" style="max-width:380px">
     <h3 id="appConfirmTitulo"><span id="appConfirmIcono">⚠️</span> <span id="appConfirmTituloTxt">Confirmar</span></h3>
     <p id="appConfirmMsg" style="margin-bottom:1.25rem;white-space:pre-line"></p>
@@ -5453,29 +5402,28 @@
   <div class="modal" style="max-width:460px;width:95vw">
     <h3 id="registroAgregarTitle">➕ Agregar producto</h3>
 
+    <!-- Código rápido -->
+    <div class="field" style="margin-bottom:10px">
+      <label>Código rápido</label>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="text" autocapitalize="off" id="regAgrCodigoRapido" placeholder="ej: 101-1½x1.2" autocomplete="off"
+          style="flex:1;background:var(--bg);border:2px solid rgba(245,158,11,0.4);border-radius:8px;color:var(--text);padding:8px 12px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700"
+          oninput="const s=this.selectionStart,e=this.selectionEnd;this.value=this.value.toUpperCase();this.setSelectionRange(s,e);"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();autoFillRegAgrCodigo()}">
+        <button onclick="autoFillRegAgrCodigo()" title="Buscar código"
+          style="padding:8px 12px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);border-radius:8px;color:var(--accent);font-size:1rem;cursor:pointer;font-weight:700;white-space:nowrap">🔍</button>
+        <button onclick="limpiarRegAgrCodigo()" title="Limpiar y desbloquear" id="regAgrClearCodigo" style="display:none;padding:8px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:var(--danger);font-size:0.9rem;cursor:pointer">✕</button>
+      </div>
+      <div id="regAgrCodigoRapidoMsg" style="font-size:0.72rem;margin-top:4px;display:none"></div>
+    </div>
+
     <div id="regAgrCalidadSection" style="display:none;margin-bottom:0.75rem">
       <div class="quality-toggle">
-        <button class="q-btn active-1ra" id="regAgrBtn1ra" onclick="setRegAgrCalidad('1RA CALIDAD')">⭐ 1RA</button>
+        <button class="q-btn" id="regAgrBtn1ra" onclick="setRegAgrCalidad('1RA CALIDAD')">⭐ 1RA</button>
         <button class="q-btn" id="regAgrBtn2da" onclick="setRegAgrCalidad('2DA CALIDAD')">2DA</button>
       </div>
     </div>
 
-    <!-- Buscador en vivo (reemplaza Código rápido + filtros en cascada) -->
-    <div class="field" style="margin-bottom:10px">
-      <label>Buscar código o descripción</label>
-      <div style="display:flex;gap:6px">
-        <input type="text" autocapitalize="off" id="regAgrBuscador" placeholder="ej. alu 0.20 galva ondu / código" autocomplete="off"
-          oninput="regAgrBuscarEnVivo()"
-          style="flex:1;background:var(--bg);border:2px solid rgba(245,158,11,0.4);border-radius:8px;color:var(--text);padding:8px 12px;font-family:'Barlow',sans-serif;font-size:0.92rem">
-        <button onclick="limpiarRegAgrCodigo()" title="Limpiar y desbloquear" id="regAgrClearCodigo" style="display:none;padding:8px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:var(--danger);font-size:0.9rem;cursor:pointer">✕</button>
-      </div>
-      <div id="regAgrBuscadorLista" style="max-height:34vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:6px"></div>
-      <div id="regAgrCodigoRapidoMsg" style="font-size:0.72rem;margin-top:4px;display:none"></div>
-    </div>
-
-    <!-- Filtros en cascada — ocultos, ya no se usan en la UI. Se mantienen en el DOM porque
-         _fillRegAgrFromProducto() los sigue usando internamente. -->
-    <div id="regAgrFiltrosCascadaWrap" style="display:none">
     <div class="form-row">
       <div class="field"><label>Material</label>
         <select id="regAgrMaterial" onchange="onRegAgrMatChange()" class="cycle-hidden-select"><option value="">— Seleccionar —</option></select>
@@ -5502,7 +5450,6 @@
         <button type="button" class="cycle-btn" id="btn_regAgrPies" onclick="cycleSelect('regAgrPies')" disabled><span id="lbl_regAgrPies">— Seleccionar —</span></button>
       </div>
       <div></div>
-    </div>
     </div>
 
     <div class="product-card" id="regAgrProductCard">
@@ -5705,7 +5652,6 @@ let odooDataBNC = {}; // Existencia Odoo propia de BNC, independiente de odooDat
 let bncControlCalidadData = {}; // Cantidad de "BNC Control de Calidad" por código, editable en Cuadre BNC
 let bncClasificacionData = {};  // Cantidad "Clasificación" (clasificada a 2da) por código, editable en Cuadre BNC
 let modoConteo = 'parcial'; // 'general' | 'parcial' — controla en qué colección se guarda/lee el Conteo
-let _generalDesbloqueado = false; // controla si ya se ingresó el PIN para Conteo General en esta sesión
 // NOTA: por defecto arranca en 'parcial' (no requiere PIN). Conteo General requiere
 // pasar por setModoConteo('general'), que pide el PIN 2907 antes de habilitarlo.
 let odooData  = {};
@@ -5719,7 +5665,7 @@ let _cameraStream    = null;
 let _cameraCategoria = '';
 let _cameraFotoCount = 0;
 let _cameraContexto  = 'despacho'; // 'despacho' | 'transporte' — a qué colección guarda la cámara viva compartida
-let calidad = '1RA CALIDAD', currentProduct = null, editingProductId = null, deletingProductId = null;
+let calidad = '', currentProduct = null, editingProductId = null, deletingProductId = null;
 let bdSortKey = 'cal', bdSortAsc = true;
 
 function saveBD() {}
@@ -5943,6 +5889,121 @@ function renderAuditoriaAlertas() {
   cont.innerHTML = lista.map(_tarjetaAlertaAuditoria).join('');
 }
 
+// ═══════ Análisis de Alertas: helpers para los reportes (Interactivo y PDF) ═══════
+
+// Normaliza un nombre para comparación: minúsculas, sin tildes, espacios limpios
+function _normalizarNombreAlerta(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+// Agrupa alertas por persona, uniendo variantes del mismo nombre (ej. "bryan reyes"
+// y "Bryan Alexander Reyes Monroy") cuando las palabras de un nombre son un subconjunto
+// completo de las palabras del otro. Nombres sin ninguna palabra en común se tratan
+// como personas distintas. El nombre más completo del grupo se usa como etiqueta final.
+function _agruparPersonasAlertas(lista) {
+  const grupos = [];
+  lista.forEach(a => {
+    const nombreOriginal = (a.nombre || 'Sin nombre').trim() || 'Sin nombre';
+    const norm = _normalizarNombreAlerta(nombreOriginal);
+    const tokens = new Set(norm.split(' ').filter(Boolean));
+    let grupo = grupos.find(g => {
+      const aSubB = [...tokens].every(t => g.tokens.has(t));
+      const bSubA = [...g.tokens].every(t => tokens.has(t));
+      return aSubB || bSubA;
+    });
+    if (grupo) {
+      grupo.count++;
+      if (tokens.size > grupo.tokens.size) { grupo.tokens = tokens; grupo.nombre = nombreOriginal; }
+    } else {
+      grupos.push({ tokens, nombre: nombreOriginal, count: 1 });
+    }
+  });
+  return grupos.sort((a, b) => b.count - a.count);
+}
+
+// Genera barras horizontales con conteo y porcentaje para una lista de pares [etiqueta, cantidad]
+function _barrasAnalisisAlertas(entries, total, color) {
+  if (!entries.length) return '<div style="font-size:0.82rem;color:#94a3b8">Sin datos</div>';
+  const max = Math.max(...entries.map(e => e[1]), 1);
+  return entries.map(([label, count]) => {
+    const pct = total ? Math.round((count / total) * 100) : 0;
+    const anchoPct = Math.round((count / max) * 100);
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:3px;color:#1e293b">
+        <span>${_escapeHtml(label)}</span><span style="font-weight:700">${count} (${pct}%)</span>
+      </div>
+      <div style="background:#e5e7eb;border-radius:6px;height:10px;overflow:hidden">
+        <div style="width:${anchoPct}%;height:100%;background:${color}"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Genera un gráfico de barras verticales simple para la tendencia en el tiempo (por día)
+function _tendenciaAnalisisAlertas(diasOrdenados) {
+  if (!diasOrdenados.length) return '<div style="font-size:0.82rem;color:#94a3b8">Sin datos</div>';
+  const max = Math.max(...diasOrdenados.map(([, v]) => v.count), 1);
+  return `<div style="display:flex;align-items:flex-end;gap:6px;height:130px;overflow-x:auto;padding-top:10px">` +
+    diasOrdenados.map(([, v]) => {
+      const h = Math.max(Math.round((v.count / max) * 100), 4);
+      return `<div style="display:flex;flex-direction:column;align-items:center;min-width:32px;flex-shrink:0">
+        <div style="font-size:0.68rem;font-weight:700;margin-bottom:3px;color:#1e293b">${v.count}</div>
+        <div style="width:20px;height:${h}px;background:#3b82f6;border-radius:3px 3px 0 0"></div>
+        <div style="font-size:0.62rem;color:#64748b;margin-top:4px;white-space:nowrap">${v.label}</div>
+      </div>`;
+    }).join('') + `</div>`;
+}
+
+// Construye el bloque completo de "Análisis General" (área, turno, persona y tendencia)
+// reutilizado tanto por el Reporte Interactivo como por el PDF de Alertas.
+function _bloqueAnalisisAlertas(lista) {
+  const total = lista.length;
+  if (!total) return '';
+
+  const porArea = {};
+  lista.forEach(a => { porArea[a.area] = (porArea[a.area] || 0) + 1; });
+  const areaEntries = Object.entries(porArea).sort((a, b) => b[1] - a[1])
+    .map(([area, count]) => { const m = _areaMeta(area); return [`${m.icono} ${m.nombre}`, count]; });
+
+  const porTurno = {};
+  lista.forEach(a => { const t = a.turno === '1' ? 'Turno 1' : a.turno === '2' ? 'Turno 2' : 'Sin turno'; porTurno[t] = (porTurno[t] || 0) + 1; });
+  const turnoEntries = Object.entries(porTurno).sort((a, b) => b[1] - a[1]);
+
+  const personaEntries = _agruparPersonasAlertas(lista).slice(0, 8).map(g => [_formatoNombrePropio(g.nombre), g.count]);
+
+  const porDiaMap = new Map();
+  lista.forEach(a => {
+    const d = a.timestamp ? new Date(a.timestamp) : new Date();
+    const key = d.toISOString().slice(0, 10);
+    if (!porDiaMap.has(key)) porDiaMap.set(key, { count: 0, label: d.toLocaleDateString('es-GT', { day: '2-digit', month: '2-digit' }) });
+    porDiaMap.get(key).count++;
+  });
+  const diasOrdenados = [...porDiaMap.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1));
+
+  return `
+  <div class="analisis-alertas" style="background:#f8fafc;border:1px solid #d8dce3;border-radius:12px;padding:1.2rem 1.4rem;margin-bottom:1.4rem">
+    <h2 style="font-size:1.1rem;margin:0 0 1rem;color:#1e293b">📊 Análisis General</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.4rem 2rem">
+      <div>
+        <div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin-bottom:8px">Incidencias por Área</div>
+        ${_barrasAnalisisAlertas(areaEntries, total, '#f59e0b')}
+      </div>
+      <div>
+        <div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin-bottom:8px">Incidencias por Turno</div>
+        ${_barrasAnalisisAlertas(turnoEntries, total, '#3b82f6')}
+      </div>
+      <div>
+        <div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin-bottom:8px">Top Personas que Reportan</div>
+        ${_barrasAnalisisAlertas(personaEntries, total, '#10b981')}
+      </div>
+      <div>
+        <div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin-bottom:8px">Tendencia en el Tiempo</div>
+        ${_tendenciaAnalisisAlertas(diasOrdenados)}
+      </div>
+    </div>
+  </div>`;
+}
+
 function auditoriaGenerarReporteInteractivoAlertas() {
   const areas = _auditoriaFiltroAreaAlertas ? [_auditoriaFiltroAreaAlertas] : ALERTAS_AREAS;
   let lista = [];
@@ -5964,6 +6025,9 @@ function auditoriaGenerarReporteInteractivoAlertas() {
 
   const tarjetasHtml = lista.map((a, idx) => {
     const m = _areaMeta(a.area);
+    const turnoTxt = a.turno === '1' ? '🔄 Turno 1' : a.turno === '2' ? '🔄 Turno 2' : null;
+    const turnoColor = a.turno === '1' ? { bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.4)', color: '#3b82f6' } : { bg: 'rgba(168,85,247,0.15)', border: 'rgba(168,85,247,0.4)', color: '#a855f7' };
+    const turnoBadge = turnoTxt ? `<span style="font-size:0.72rem;font-weight:700;padding:3px 9px;border-radius:6px;background:${turnoColor.bg};color:${turnoColor.color};border:1px solid ${turnoColor.border}">${turnoTxt}</span>` : '';
     const fotos = Array.isArray(a.fotos) ? a.fotos : [];
     const fotosHtml = fotos.length
       ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">` +
@@ -5971,12 +6035,13 @@ function auditoriaGenerarReporteInteractivoAlertas() {
         `</div>`
       : '';
     const textoBusqueda = [a.nombre, a.comentario, m.nombre].join(' ').toLowerCase().replace(/"/g, '');
-    return `<div class="repCard" data-area="${a.area}" data-busq="${textoBusqueda}" style="background:var(--surface2);border:1px solid var(--border);border-left:4px solid var(--danger);border-radius:10px;padding:14px 16px;margin-bottom:0.75rem;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
+    return `<div class="repCard" data-area="${a.area}" data-busq="${textoBusqueda}" style="background:var(--surface2);border:1px solid var(--border);border-left:4px solid var(--danger);border-radius:10px;padding:14px 16px;margin-bottom:0.75rem;box-shadow:0 1px 3px rgba(0,0,0,0.06);page-break-inside:avoid;break-inside:avoid">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span style="font-size:1.15rem">🚨</span>
           <span style="font-weight:800;font-size:1.02rem">${_escapeHtml(a.nombre || 'Sin nombre')}</span>
           <span style="font-size:0.72rem;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(${m.rgb},0.15);color:${m.color};border:1px solid rgba(${m.rgb},0.4)">${m.icono} ${m.nombre}</span>
+          ${turnoBadge}
         </div>
         <span style="font-size:0.8rem;color:var(--muted)">${a.fecha || ''}</span>
       </div>
@@ -5994,6 +6059,7 @@ function auditoriaGenerarReporteInteractivoAlertas() {
     --text:#1e293b; --muted:#64748b;
   }
   body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;margin:0;padding:2rem}
+  * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
   h1{font-size:1.4rem;color:#db2777;margin-bottom:0.2rem}
   .sub{color:var(--muted);margin-bottom:1.2rem;font-size:0.9rem}
   .repBuscador{width:100%;box-sizing:border-box;background:#fff;color:#111;border:1px solid var(--border);border-radius:8px;padding:11px 14px;font-size:1rem;margin-bottom:0.7rem;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
@@ -6014,6 +6080,7 @@ function auditoriaGenerarReporteInteractivoAlertas() {
     <h1 style="margin-bottom:0">🚨 Auditoría — Reporte Interactivo de Alertas</h1>
   </div>
   <div class="sub">${rangoTxt} · ${_plantaMeta(plantaActivaActual()).nombre} · <span id="repContador">${lista.length}</span> alerta(s) · Generado ${new Date().toLocaleString('es-GT')} · Toca una foto para ampliarla</div>
+  ${_bloqueAnalisisAlertas(lista)}
   <input type="text" autocapitalize="off" class="repBuscador" id="repBuscador" placeholder="🔍 Buscar por nombre, área o comentario" oninput="repFiltrarTexto(this.value)">
   <div class="repToolbar">
     <div class="repChips">${chipsReporte}</div>
@@ -6094,18 +6161,22 @@ function auditoriaGenerarReporteAlertas() {
 
   const tarjetasHtml = lista.map(a => {
     const m = _areaMeta(a.area);
+    const turnoTxt = a.turno === '1' ? '🔄 Turno 1' : a.turno === '2' ? '🔄 Turno 2' : null;
+    const turnoColor = a.turno === '1' ? { bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.35)', color: '#3b82f6' } : { bg: 'rgba(168,85,247,0.12)', border: 'rgba(168,85,247,0.35)', color: '#a855f7' };
+    const turnoBadge = turnoTxt ? `<span style="font-size:0.7rem;font-weight:700;padding:3px 9px;border-radius:6px;background:${turnoColor.bg};color:${turnoColor.color};border:1px solid ${turnoColor.border}">${turnoTxt}</span>` : '';
     const fotos = Array.isArray(a.fotos) ? a.fotos : [];
     const fotosHtml = fotos.length
       ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">` +
           fotos.map(url => `<img src="${url}" style="width:90px;height:90px;object-fit:cover;border-radius:6px;border:1px solid #d8dce3">`).join('') +
         `</div>`
       : '';
-    return `<div style="background:#fff;border:1px solid #d8dce3;border-left:4px solid #dc2626;border-radius:8px;padding:12px 16px;margin-bottom:0.75rem;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
+    return `<div style="background:#fff;border:1px solid #d8dce3;border-left:4px solid #dc2626;border-radius:8px;padding:12px 16px;margin-bottom:0.75rem;box-shadow:0 1px 3px rgba(0,0,0,0.06);page-break-inside:avoid;break-inside:avoid">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span style="font-size:1.1rem">🚨</span>
           <span style="font-weight:800;font-size:1rem">${_escapeHtml(a.nombre || 'Sin nombre')}</span>
           <span style="font-size:0.7rem;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(${m.rgb},0.12);color:${m.color};border:1px solid rgba(${m.rgb},0.35)">${m.icono} ${m.nombre}</span>
+          ${turnoBadge}
         </div>
         <span style="font-size:0.78rem;color:#64748b">${a.fecha || ''}</span>
       </div>
@@ -6118,16 +6189,18 @@ function auditoriaGenerarReporteAlertas() {
 <title>Auditoría — Reporte de Alertas — ${_fechaCortaTag()}</title>
 <style>
   body{background:#fff;color:#1e293b;font-family:Arial,sans-serif;margin:0;padding:2rem}
+  * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
   h1{font-size:1.4rem;color:#db2777;margin-bottom:0.2rem}
   .sub{color:#64748b;margin-bottom:1.2rem;font-size:0.9rem}
   .footer{margin-top:1.5rem;color:#64748b;font-size:0.8rem}
-  @media print { body{padding:0.6rem} }
+  @media print { body{padding:0.6rem} .analisis-alertas{page-break-inside:avoid} }
 </style></head><body>
   <div style="display:flex;align-items:center;gap:14px;margin-bottom:0.3rem">
     <img src="data:image/png;base64,${_AUDITORIA_LOGO_B64}" alt="Logo" style="height:80px;width:auto;object-fit:contain">
     <h1 style="margin-bottom:0">🚨 Auditoría — Reporte de Alertas</h1>
   </div>
   <div class="sub">${rangoTxt} · ${_plantaMeta(plantaActivaActual()).nombre} · ${lista.length} alerta(s) · Generado ${new Date().toLocaleString('es-GT')}</div>
+  ${_bloqueAnalisisAlertas(lista)}
   ${tarjetasHtml}
   <div class="footer">Conteo PT — Reporte generado desde el área Auditoría. Los datos quedaron fijos al momento de generarlo.</div>
   <script>window.addEventListener('load', () => setTimeout(() => window.print(), 300));<\/script>
@@ -6900,27 +6973,10 @@ function setCalidad(val) {
   calidad = val;
   document.getElementById('btn1ra').className = 'q-btn' + (val === '1RA CALIDAD' ? ' active-1ra' : '');
   document.getElementById('btn2da').className = 'q-btn' + (val === '2DA CALIDAD' ? ' active-2da' : '');
-
-  // Si ya había un producto elegido, buscar su equivalente en la nueva calidad
-  // (mismo código, con o sin el prefijo "2-") y aplicarlo automáticamente.
-  if (currentProduct && currentProduct.codigo) {
-    const codActual = currentProduct.codigo.trim().toUpperCase();
-    const esActual2da = codActual.startsWith('2-');
-    let codBuscado = null;
-    if (val === '2DA CALIDAD' && !esActual2da) codBuscado = '2-' + codActual;
-    else if (val === '1RA CALIDAD' && esActual2da) codBuscado = codActual.slice(2);
-    if (codBuscado) {
-      const equivalente = BD.find(x => x.codigo && x.codigo.trim().toUpperCase() === codBuscado);
-      if (equivalente) { _conteoAplicarProducto(equivalente); return; }
-    }
-    // No se encontró equivalente en la nueva calidad — se limpia el producto elegido
-    // (no tiene sentido dejar seleccionado un producto de la calidad anterior).
-    currentProduct = null; updateProductCard();
-  }
-
   onTipoChange();
-  conteoBuscarEnVivo();
 }
+
+let _generalDesbloqueado = false; // true una vez que se ingresa el PIN correcto en esta sesión
 
 function setModoConteo(modo) {
   const destino = modo === 'parcial' ? 'parcial' : 'general';
@@ -7499,8 +7555,8 @@ async function guardarRegistro() {
 }
 
 function limpiarFormulario() {
-  calidad = '1RA CALIDAD';
-  document.getElementById('btn1ra').className = 'q-btn active-1ra';
+  calidad = '';
+  document.getElementById('btn1ra').className = 'q-btn';
   document.getElementById('btn2da').className = 'q-btn';
   tipoTubo = ''; materialTubo = '';
   renderTipoTuboBtn(); renderMaterialTuboBtn();
@@ -7533,13 +7589,10 @@ function conteoBuscarEnVivo() {
 
   const palabras = _sinTildes(q.toUpperCase()).split(/\s+/).filter(Boolean);
   const filtrados = (BD || []).filter(p => {
-    if (calidad && p.cal !== calidad) return false;
     if (!palabras.length) return true;
     const texto = _sinTildes((p.desc || '').toUpperCase());
     const codigo = _sinTildes((p.codigo || '').toUpperCase());
-    const coincideDescripcion = palabras.every(w => _fichaTextoContienePalabra(texto, w));
-    const coincideCodigo = palabras.every(w => codigo.includes(w));
-    return coincideDescripcion || coincideCodigo;
+    return palabras.every(w => texto.includes(w) || codigo.includes(w));
   }).slice(0, 60);
 
   if (!filtrados.length) {
@@ -8243,7 +8296,20 @@ function sortBD(key) {
 
 function renderBD() {
   const q = (document.getElementById('bdSearch').value || '').toLowerCase();
-  let f = BD.filter(p => !q || [p.codigo, p.desc].some(v => v && v.toLowerCase().includes(q)));
+  let f = BD.filter(p => !q || [p.codigo, p.desc, p.tipo, p.mat, p.medida, p.pies, p.espesor, p.cal, p.usoDestino, p.grado, p.categoriaPeso, p.calibre]
+    .some(v => v && v.toLowerCase().includes(q)));
+
+  // Aplicar chips de filtro
+  if (bdChipsActivos.cal)     f = f.filter(p => p.cal     === bdChipsActivos.cal);
+  if (bdChipsActivos.mat)     f = f.filter(p => p.mat     === bdChipsActivos.mat);
+  if (bdChipsActivos.tipo)    f = f.filter(p => p.tipo    === bdChipsActivos.tipo);
+  if (bdChipsActivos.medida)  f = f.filter(p => p.medida  === bdChipsActivos.medida);
+  if (bdChipsActivos.pies)    f = f.filter(p => p.pies    === bdChipsActivos.pies);
+  if (bdChipsActivos.espesor) f = f.filter(p => p.espesor === bdChipsActivos.espesor);
+  if (bdChipsActivos.usoDestino)    f = f.filter(p => p.usoDestino    === bdChipsActivos.usoDestino);
+  if (bdChipsActivos.grado)         f = f.filter(p => p.grado         === bdChipsActivos.grado);
+  if (bdChipsActivos.categoriaPeso) f = f.filter(p => p.categoriaPeso === bdChipsActivos.categoriaPeso);
+  if (bdChipsActivos.calibre)       f = f.filter(p => p.calibre       === bdChipsActivos.calibre);
 
   f.sort((a, b) => {
     const av = a[bdSortKey], bv = b[bdSortKey];
@@ -8256,50 +8322,29 @@ function renderBD() {
   const tbody = document.getElementById('bdBody');
 
   if (!f.length) {
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-table"><div class="empty-icon">🔍</div><div>Sin resultados</div></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="17"><div class="empty-table"><div class="empty-icon">🔍</div><div>Sin resultados</div></div></td></tr>`;
     return;
   }
-
-  const opcionesColor = _opcionesColorPorArea();
-  const opcionesArea = [
-    ['tuberia', 'Tubería'], ['costanera', 'Costanera'], ['lamina', 'Lámina'],
-    ['tiras_bobinas', 'Tira/Bobina'], ['insumos', 'Insumos']
-  ];
 
   tbody.innerHTML = f.map(p => {
     const hex = colorMap[p.color] || '#64748b';
     const kgU = (p.pesoKg !== null && p.pesoKg !== undefined && p.pesoKg !== '') ? Number(p.pesoKg) : null;
     const kgAtado = (kgU !== null && p.uAtado) ? kgU * p.uAtado : null;
-    const codSeguro = p.codigo.replace(/'/g, "\\'");
-    const areaInfo = _ODOO_REF_AREA_INFO[p.area] || { label: p.area, color: '#64748b' };
     return `<tr>
+      <td><span class="tag ${p.cal==='1RA CALIDAD'?'tag-1ra':'tag-2da'}">${p.cal==='1RA CALIDAD'?'1RA':'2DA'}</span></td>
+      <td>${p.tipo}</td><td>${p.mat}</td>
+      <td style="font-weight:600">${p.medida || '—'}</td><td style="font-weight:600" class="col-pies">${p.pies || '—'}</td><td>${p.espesor}</td>
+      <td><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.79rem">
+        <span style="width:10px;height:10px;border-radius:50%;background:${hex};border:1px solid rgba(255,255,255,0.15);flex-shrink:0"></span>
+        ${p.color}</span></td>
+      <td style="text-align:center;font-weight:700;color:var(--accent2)">${p.uAtado ?? '—'}</td>
+      <td style="text-align:center;font-weight:600">${kgU !== null ? kgU.toLocaleString('es-GT',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</td>
+      <td style="text-align:center;font-weight:700;color:var(--accent)">${kgAtado !== null ? kgAtado.toLocaleString('es-GT',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</td>
       <td class="td-code">${p.codigo}</td>
-      <td style="font-size:0.85rem;color:var(--text)">${p.desc || '—'}</td>
-      <td>
-        <select onchange="_bdOdooCambiarArea('${codSeguro}', this.value)"
-          style="width:100%;box-sizing:border-box;font-size:0.76rem;font-weight:700;background:${areaInfo.color}18;border:2px solid ${areaInfo.color};color:${areaInfo.color};border-radius:8px;padding:6px 8px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.02em">
-          <option value="" style="background:#1a1d27;color:#e2e8f0" ${!p.areaManual ? 'selected' : ''}>Auto: ${areaInfo.label}</option>
-          ${opcionesArea.map(([val,label]) => `<option value="${val}" style="background:#1a1d27;color:#e2e8f0" ${p.areaManual && p.area===val ? 'selected' : ''}>${label}</option>`).join('')}
-        </select>
-      </td>
-      <td style="text-align:center">
-        <button type="button" onclick="abrirModalBdEditarColor('${codSeguro}')"
-          style="width:auto;display:inline-flex;margin:0 auto;align-items:center;justify-content:center;gap:7px;padding:7px 16px;border-radius:9px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.82rem;text-transform:uppercase;letter-spacing:0.02em;background:${hex}2a;border:2px solid ${hex};color:var(--text)">
-          <span style="width:10px;height:10px;border-radius:50%;background:${hex};border:1px solid rgba(255,255,255,0.2);flex-shrink:0"></span>
-          ${p.color}
-        </button>
-      </td>
-      <td style="text-align:center">
-        <button class="btn btn-ghost btn-sm" onclick="abrirModalBdEditarValor('${codSeguro}', 'uAtado')"
-          style="width:auto;display:inline-flex;margin:0 auto;font-weight:700;color:var(--accent2);padding:4px 14px;font-size:0.82rem">${p.uAtado ?? '—'}</button>
-      </td>
-      <td style="text-align:center">
-        <button class="btn btn-ghost btn-sm" onclick="abrirModalBdEditarValor('${codSeguro}', 'pesoKg')"
-          style="width:auto;display:inline-flex;margin:0 auto;font-weight:600;padding:4px 14px;font-size:0.82rem">${kgU !== null ? kgU.toLocaleString('es-GT',{minimumFractionDigits:3,maximumFractionDigits:3}) : '—'}</button>
-      </td>
-      <td style="text-align:center;font-weight:700;color:var(--accent)">${kgAtado !== null ? kgAtado.toLocaleString('es-GT',{minimumFractionDigits:3,maximumFractionDigits:3}) : '—'}</td>
+      <td class="col-pies" style="font-weight:600;color:var(--accent2)">${p.codigoCorto || '—'}</td>
       <td><div class="bd-actions">
         <button class="btn btn-ghost btn-sm"      onclick="verFichaProducto('${p.id}')">👁 Ver</button>
+        <button class="btn btn-secondary btn-sm" onclick="openProductModal('${p.id}')">✏ Editar</button>
         <button class="btn btn-danger btn-sm"    onclick="showDeleteProduct('${p.id}')">🗑</button>
         <button class="btn btn-sm bd-foto-btn" id="foto-btn-${p.id}" onclick="event.stopPropagation();manejarFotoProducto('${p.id}')" style="padding:4px 8px;font-size:0.75rem;background:${(p.fotoUrl||p.fotoUrl2)?'rgba(16,185,129,0.15)':'rgba(239,68,68,0.15)'};border:1px solid ${(p.fotoUrl||p.fotoUrl2)?'var(--success)':'var(--danger)'};color:${(p.fotoUrl||p.fotoUrl2)?'var(--success)':'var(--danger)'};border-radius:6px;cursor:pointer;white-space:nowrap" title="${(p.fotoUrl||p.fotoUrl2)?'Ver fotos':'Adjuntar foto'}">📷 ${(p.fotoUrl||p.fotoUrl2)?'✅':'❌'}</button>
       </div></td></tr>`;
@@ -8953,8 +8998,7 @@ function showDeleteProduct(id) {
 async function confirmarEliminarProducto() {
   if (!window.fbDb) { showToast('⚠️', 'Sin conexión'); return; }
   try {
-    window._odooRef = (window._odooRef || []).filter(it => it.codigo !== String(deletingProductId));
-    await _bdOdooGuardarInmediato();
+    await colArea('bd').doc(String(deletingProductId)).delete();
     closeModal('deleteProductModal');
     showToast('🗑', 'Producto eliminado');
   } catch(e) {
@@ -8972,27 +9016,26 @@ function exportarTablaPT() {
   if (!BD.length) { showToast('⚠️', 'No hay productos en Tabla PT'); return; }
 
   const rows = BD.map(p => ({
-    'CÓDIGO':        p.codigo,
-    'DESCRIPCIÓN':   p.desc,
-    'ÁREA':          (_ODOO_REF_AREA_INFO[p.area] || {}).label || p.area || '',
-    'COLOR':         p.color,
-    'U/ATADO':       p.uAtado,
-    'PESO KG/U':     p.pesoKg ?? '',
-    'KG/ATADO':      (p.pesoKg && p.uAtado) ? Number((p.pesoKg * p.uAtado).toFixed(3)) : '',
     'CALIDAD':       p.cal,
     'TIPO':          p.tipo,
     'MATERIAL':      p.mat,
     'MEDIDA':        p.medida,
     'PIES':          p.pies || '',
     'ESPESOR':       p.espesor,
+    'COLOR':         p.color,
+    'U/ATADO':       p.uAtado,
+    'PESO KG/U':     p.pesoKg ?? '',
+    'KG/ATADO':      (p.pesoKg && p.uAtado) ? Number((p.pesoKg * p.uAtado).toFixed(3)) : '',
+    'CÓDIGO':        p.codigo,
+    'DESCRIPCIÓN':   p.desc,
   }));
 
   const ws = XLSX.utils.json_to_sheet(rows);
   ws['!cols'] = [
-    { wch:20 },{ wch:50 },{ wch:12 },{ wch:10 },{ wch:8 },{ wch:10 },
-    { wch:10 },{ wch:14 },{ wch:12 },{ wch:12 },{ wch:8 },{ wch:8 },{ wch:10 }
+    { wch:14 },{ wch:12 },{ wch:12 },{ wch:8 },{ wch:8 },{ wch:10 },
+    { wch:10 },{ wch:8 },{ wch:10 },{ wch:10 },{ wch:20 },{ wch:50 }
   ];
-  ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:rows.length,c:12} }) };
+  ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:rows.length,c:11} }) };
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'TABLA PT');
@@ -9730,8 +9773,10 @@ function scrollToTable() { document.getElementById('tablePanel').scrollIntoView(
 let toastTimer;
 function showToast(icon, msg) {
   const login = document.getElementById('loginScreen');
-  if (login && login.style.display !== 'none') return; // no mostrar toasts en la pantalla de inicio
+  const modalAlertaAbierto = document.getElementById('modalAlerta')?.classList.contains('open');
+  if (login && login.style.display !== 'none' && !modalAlertaAbierto) return; // no mostrar toasts en la pantalla de inicio (salvo dentro del modal de alerta, accesible desde el login)
   const t = document.getElementById('toast');
+  t.classList.toggle('toast-center', !!modalAlertaAbierto);
   document.getElementById('toastIcon').textContent = icon;
   document.getElementById('toastMsg').textContent  = msg;
   t.classList.add('show');
@@ -10162,15 +10207,10 @@ function _ordenNaturalNumerico(a, b) {
 }
 
 function construirBDChips() {
-  // Panel de chips retirado de la UI: Tipo/Material/Medida/Pies/Espesor ya no se
-  // muestran ni se filtran como columnas separadas (se derivan internamente para
-  // Resumen/reportes, pero el usuario ya no los ve ni los captura). Se deja la
-  // función en su lugar (llamada desde el cambio de página) por si algo más la
-  // referencia, pero no hace nada — el panel queda siempre oculto.
   const panel = document.getElementById('bdChipsPanel');
-  if (panel) panel.style.display = 'none';
-  return;
-  // eslint-disable-next-line no-unreachable
+  if (!BD.length) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+
   const vals = campo => {
     const base = [...new Set(BD.map(p => p[campo]).filter(Boolean))].sort(_ordenNaturalNumerico);
     return base.filter(v => BD.some(p => {
@@ -12016,12 +12056,10 @@ function generarReporteResumenExcel() {
   };
 
   const wsDetalleAoa = [
-    esPapeleria
-      ? ['CÓDIGO', 'CÓDIGO + DESCRIPCIÓN', 'CAL.', 'TIPO', 'MATERIAL', 'MEDIDA', 'ESPESOR', colPrincipal, colSecundaria, 'KG/U', 'PESO TOTAL', 'ESTADO', colDesviacionLabel]
-      : ['CÓDIGO', 'CÓDIGO + DESCRIPCIÓN', 'CAL.', 'TIPO', 'MATERIAL', 'MEDIDA', 'ESPESOR', colPrincipal, colSecundaria, 'KG/U', 'PESO TOTAL', 'ESTADO', colDesviacionLabel, 'JUSTIFICACION']
+    ['CÓDIGO', 'CÓDIGO + DESCRIPCIÓN', 'CAL.', 'TIPO', 'MATERIAL', 'MEDIDA', 'ESPESOR', colPrincipal, colSecundaria, 'KG/U', 'PESO TOTAL', 'ESTADO', colDesviacionLabel]
   ];
   rows.forEach(g => {
-    const fila = [
+    wsDetalleAoa.push([
       g.codigo,
       codigoMasDescripcion(g),
       g.cal || '—',
@@ -12035,21 +12073,14 @@ function generarReporteResumenExcel() {
       g.pesoTotal !== null && g.pesoTotal !== undefined ? Number(g.pesoTotal.toFixed(2)) : '',
       estadoTxt(g),
       valorDesviacionCol(g)
-    ];
-    if (!esPapeleria) fila.push(_justificacionParaCodigo(g));
-    wsDetalleAoa.push(fila);
+    ]);
   });
   const wsDetalle = XLSX.utils.aoa_to_sheet(wsDetalleAoa);
-  wsDetalle['!cols'] = esPapeleria
-    ? [
-        { wch: 16 }, { wch: 40 }, { wch: 8 }, { wch: 14 }, { wch: 14 }, { wch: 10 },
-        { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 9 }, { wch: 12 }, { wch: 12 }, { wch: 18 }
-      ]
-    : [
-        { wch: 16 }, { wch: 40 }, { wch: 8 }, { wch: 14 }, { wch: 14 }, { wch: 10 },
-        { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 9 }, { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 60 }
-      ];
-  wsDetalle['!autofilter'] = { ref: XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:rows.length,c: esPapeleria ? 12 : 13} }) };
+  wsDetalle['!cols'] = [
+    { wch: 16 }, { wch: 40 }, { wch: 8 }, { wch: 14 }, { wch: 14 }, { wch: 10 },
+    { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 9 }, { wch: 12 }, { wch: 12 }, { wch: 18 }
+  ];
+  wsDetalle['!autofilter'] = { ref: XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:rows.length,c:12} }) };
   XLSX.utils.book_append_sheet(wb, wsDetalle, 'Detalle');
 
   const nombreArchivo = `Reporte_${esPapeleria ? 'FisicoPapeleria' : 'FisicoSistema'}_${_areaFileTag()}_${_fechaCortaTag()}_CONTEO.PT.xlsx`;
@@ -12181,70 +12212,21 @@ function _categoriaDesdeProducto(g) {
   return (prefijo2da + partes.join(' ')).trim() || '—';
 }
 
-// Convierte un texto de fecha (dd/mm/yyyy, dd-mm-yyyy, yyyy-mm-dd, u otros formatos
-// que Date entienda) a un objeto Date. Devuelve null si no puede interpretarlo.
-function _parseFechaFlexible(fechaStr) {
-  if (!fechaStr) return null;
-  const s = String(fechaStr).trim();
-  // dd/mm/yyyy o dd-mm-yyyy (con hora opcional al final, se ignora)
-  let m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-  if (m) {
-    let [, d, mo, y] = m;
-    if (y.length === 2) y = '20' + y;
-    const dt = new Date(Number(y), Number(mo) - 1, Number(d));
-    return isNaN(dt.getTime()) ? null : dt;
-  }
-  // yyyy-mm-dd
-  m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if (m) {
-    const [, y, mo, d] = m;
-    const dt = new Date(Number(y), Number(mo) - 1, Number(d));
-    return isNaN(dt.getTime()) ? null : dt;
-  }
-  // último recurso: dejar que el motor lo intente
-  const dt = new Date(s);
-  return isNaN(dt.getTime()) ? null : dt;
-}
-
-// Días transcurridos desde una fecha hasta hoy (0 si es hoy mismo). null si no se pudo interpretar.
-function _diasTranscurridos(fechaStr) {
-  const dt = _parseFechaFlexible(fechaStr);
-  if (!dt) return null;
-  const hoy = new Date();
-  const d1 = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
-  const d2 = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-  return Math.round((d2 - d1) / 86400000);
-}
-
-// Arma el texto de Justificación combinando 👽 Movimientos Pendientes (ledger
-// window._movimientosOdoo, el mismo que usa la vista de Auditoría) + 📌 Seguimiento.
-// Un movimiento del ledger se considera pendiente cuando f.estado === 1.
-// Si el movimiento tiene un comentario (💬 agregado desde Auditoría) se agrega junto a él,
-// además de los días transcurridos desde la fecha de la operación.
+// Arma el texto de Justificación combinando 👽 Pendientes + 📌 Seguimiento.
 // Devuelve '' (vacío) si el código no tiene nada en ninguna de las 2 fuentes.
 function _justificacionParaCodigo(g) {
   const partes = [];
 
-  // ── 👽 Movimientos Pendientes (ledger de Auditoría) ──
-  const movs = window._movimientosOdoo?.[g.codigo] || [];
-  movs.forEach(f => {
-    if (f.estado !== 1) return; // solo movimientos pendientes
-    const cant = f.tipo === 'Entrada' ? f.entradas : f.salidas;
-    const cantTxt = (cant !== '' && cant != null) ? Number(cant).toLocaleString('es-GT') : '—';
-    const dias = _diasTranscurridos(f.fecha);
-    const diasTxt = dias !== null ? ` · ${dias} día${dias === 1 ? '' : 's'}` : '';
-    let texto = `Pendiente ${f.tipo || '—'} ${f.referencia || '—'} (${cantTxt})${f.fecha ? ' · ' + f.fecha : ''}${diasTxt}`;
-    const comentarioTxt = (f.comentario || f.auditoriaComentario || '').trim();
-    if (comentarioTxt) texto += ` — 💬 ${comentarioTxt}`;
-    partes.push(texto);
-  });
+  // ── 👽 Movimientos Pendientes ──
+  (g.moDetalle || []).forEach(d => { if (d.valor) partes.push(`Pendiente MO/${d.numero} (+${d.valor.toLocaleString('es-GT')})`); });
+  (g.sroDetalle || []).forEach(d => { if (d.valor) partes.push(`Pendiente SRO/${d.numero} (${d.valor > 0 ? '+' : ''}${d.valor.toLocaleString('es-GT')})`); });
+  (g.soDetalle || []).forEach(d => { if (d.valor) partes.push(`Pendiente SO/${d.numero} (${d.valor > 0 ? '+' : ''}${d.valor.toLocaleString('es-GT')})`); });
+  (g.ajusteDetalle || []).forEach(d => { if (d.valor) partes.push(`Pendiente AJUSTE/${d.numero} (${d.valor > 0 ? '+' : ''}${d.valor.toLocaleString('es-GT')})`); });
 
   // ── 📌 Seguimiento ──
   const notasSeg = window._seguimientosMov?.[g.codigo] || [];
   notasSeg.forEach(n => {
-    const dias = _diasTranscurridos(n.fecha);
-    const diasTxt = dias !== null ? ` · ${dias} día${dias === 1 ? '' : 's'}` : '';
-    partes.push(`En seguimiento: ${n.referencia || ''}${n.fecha ? ' (' + n.fecha + ')' : ''}${diasTxt}`.trim());
+    partes.push(`En seguimiento: ${n.referencia || ''}${n.fecha ? ' (' + n.fecha + ')' : ''}`.trim());
   });
 
   return partes.join(' | ');
@@ -12288,7 +12270,7 @@ function generarReporteJustificacion() {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'justificado');
-  XLSX.writeFile(wb, `Justificacion_Inventario_${_areaFileTag()}_${_fechaCortaTag()}_CONTEO.PT.xlsx`);
+  XLSX.writeFile(wb, `Justificacion_${_areaFileTag()}_${ts()}.xlsx`);
   showToast('📋', `Reporte de Justificación generado (${filas.length} códigos)`);
 }
 
@@ -14673,9 +14655,9 @@ let mos  = [];
 let sros = [];
 let bitacora = [];
 let moCurrentProduct  = null;
-let moCalidad         = '1RA CALIDAD';
+let moCalidad         = '';
 let sroCurrentProduct = null;
-let sroCalidad        = '1RA CALIDAD';
+let sroCalidad        = '';
 
 // ══════════════════════════════════════
 //  CÓDIGO RÁPIDO — AUTO-FILL FILTROS
@@ -14716,26 +14698,23 @@ function autoFillDesdeCodigo(modulo) {
 }
 
 function limpiarCodigoRapido(modulo) {
-  const inputId = modulo === 'mo' ? 'moBuscador' : 'sroBuscador';
-  const listaId = modulo === 'mo' ? 'moBuscadorLista' : 'sroBuscadorLista';
+  const inputId = modulo === 'mo' ? 'moCodigoRapido' : 'sroCodigoRapido';
   const msgId   = modulo === 'mo' ? 'moCodigoRapidoMsg' : 'sroCodigoRapidoMsg';
   const clearId = modulo === 'mo' ? 'moClearCodigo' : 'sroClearCodigo';
   const input   = document.getElementById(inputId);
   if (input) { input.value = ''; input.style.borderColor = ''; }
-  const lista = document.getElementById(listaId);
-  if (lista) lista.innerHTML = '';
   const msg = document.getElementById(msgId);
   if (msg) { msg.style.display = 'none'; msg.textContent = ''; }
   document.getElementById(clearId).style.display = 'none';
   if (modulo === 'mo') {
     _bloquearFiltrosMO(false);
-    setMoCalidad('1RA CALIDAD'); moCurrentProduct = null; updateMoProductCard(); resetMoMedida();
+    setMoCalidad(''); moCurrentProduct = null; updateMoProductCard(); resetMoMedida();
     document.getElementById('moTipo').value = '';
     document.getElementById('moMaterial').value = '';
     _syncCycleGroup('mo');
   } else {
     _bloquearFiltrosSRO(false);
-    setSroCalidad('1RA CALIDAD'); sroCurrentProduct = null; updateSroProductCard(); resetSroMedida();
+    setSroCalidad(''); sroCurrentProduct = null; updateSroProductCard(); resetSroMedida();
     document.getElementById('sroTipo').value = '';
     document.getElementById('sroMaterial').value = '';
     _syncCycleGroup('sro');
@@ -14781,67 +14760,6 @@ function _fillMoFromProducto(p) {
   _syncCycleGroup('mo');
 }
 
-// Buscador en vivo de MO (reemplaza Código rápido + filtros en cascada) — busca por
-// código o descripción contra la Tabla PT del área activa (BD), filtrado por la
-// Calidad activa (moCalidad, 1RA por defecto).
-function moBuscarEnVivo() {
-  const q = (document.getElementById('moBuscador')?.value || '').trim();
-  const lista = document.getElementById('moBuscadorLista');
-  const msg = document.getElementById('moCodigoRapidoMsg');
-  if (msg) msg.style.display = 'none';
-  if (!lista) return;
-  if (!q) { lista.innerHTML = ''; return; }
-
-  const palabras = _sinTildes(q.toUpperCase()).split(/\s+/).filter(Boolean);
-  const filtrados = (BD || []).filter(p => {
-    if (moCalidad && p.cal !== moCalidad) return false;
-    if (!palabras.length) return true;
-    const texto = _sinTildes((p.desc || '').toUpperCase());
-    const codigo = _sinTildes((p.codigo || '').toUpperCase());
-    const coincideDescripcion = palabras.every(w => _fichaTextoContienePalabra(texto, w));
-    const coincideCodigo = palabras.every(w => codigo.includes(w));
-    return coincideDescripcion || coincideCodigo;
-  }).slice(0, 60);
-
-  if (!filtrados.length) {
-    lista.innerHTML = '<div class="empty-hint">Sin resultados en la Tabla PT.</div>';
-    return;
-  }
-  lista.innerHTML = filtrados.map(p => {
-    const estilo = _fichaDigitalEstiloCalidad(p.codigo);
-    const descLimpia = (p.desc || '').replace(/^\[.*?\]\s*/, '');
-    return `<div class="torre-candidato-item" style="${estilo}" onclick="moElegirProductoBuscado('${String(p.codigo).replace(/'/g,"\\'")}')">
-      <strong>${p.codigo}</strong> — ${descLimpia}
-    </div>`;
-  }).join('');
-}
-
-function moElegirProductoBuscado(codigo) {
-  const norm = String(codigo || '').trim().toUpperCase();
-  const p = BD.find(x => x.codigo && x.codigo.trim().toUpperCase() === norm);
-  const msg = document.getElementById('moCodigoRapidoMsg');
-  if (!p) {
-    if (msg) { msg.textContent = '⚠ Código no encontrado en la BD'; msg.style.color = 'var(--danger)'; msg.style.display = 'block'; }
-    const lista = document.getElementById('moBuscadorLista');
-    if (lista) lista.innerHTML = '';
-    return;
-  }
-  if (msg) {
-    msg.textContent = `✅ ${p.desc ? p.desc.replace(/^\[.*?\]\s*/,'') : p.codigo}`;
-    msg.style.color = 'var(--success)';
-    msg.style.display = 'block';
-  }
-  document.getElementById('moClearCodigo').style.display = 'inline-flex';
-  const input = document.getElementById('moBuscador');
-  if (input) input.value = p.codigo;
-  const lista = document.getElementById('moBuscadorLista');
-  if (lista) lista.innerHTML = '';
-
-  _fillMoFromProducto(p);
-  _bloquearFiltrosMO(true);
-  playClick(); vibrate([15]);
-}
-
 function _fillSroFromProducto(p) {
   setSroCalidad(p.cal === '2DA CALIDAD' ? '2DA CALIDAD' : '1RA CALIDAD');
   document.getElementById('sroTipo').value = p.tipo || '';
@@ -14873,65 +14791,6 @@ function _fillSroFromProducto(p) {
   selEsp.value = p.espesor || '';
   sroCurrentProduct = p; updateSroProductCard(); calcularSroTotal();
   _syncCycleGroup('sro');
-}
-
-// Buscador en vivo de SRO (reemplaza Código rápido + filtros en cascada) — misma lógica que moBuscarEnVivo.
-function sroBuscarEnVivo() {
-  const q = (document.getElementById('sroBuscador')?.value || '').trim();
-  const lista = document.getElementById('sroBuscadorLista');
-  const msg = document.getElementById('sroCodigoRapidoMsg');
-  if (msg) msg.style.display = 'none';
-  if (!lista) return;
-  if (!q) { lista.innerHTML = ''; return; }
-
-  const palabras = _sinTildes(q.toUpperCase()).split(/\s+/).filter(Boolean);
-  const filtrados = (BD || []).filter(p => {
-    if (sroCalidad && p.cal !== sroCalidad) return false;
-    if (!palabras.length) return true;
-    const texto = _sinTildes((p.desc || '').toUpperCase());
-    const codigo = _sinTildes((p.codigo || '').toUpperCase());
-    const coincideDescripcion = palabras.every(w => _fichaTextoContienePalabra(texto, w));
-    const coincideCodigo = palabras.every(w => codigo.includes(w));
-    return coincideDescripcion || coincideCodigo;
-  }).slice(0, 60);
-
-  if (!filtrados.length) {
-    lista.innerHTML = '<div class="empty-hint">Sin resultados en la Tabla PT.</div>';
-    return;
-  }
-  lista.innerHTML = filtrados.map(p => {
-    const estilo = _fichaDigitalEstiloCalidad(p.codigo);
-    const descLimpia = (p.desc || '').replace(/^\[.*?\]\s*/, '');
-    return `<div class="torre-candidato-item" style="${estilo}" onclick="sroElegirProductoBuscado('${String(p.codigo).replace(/'/g,"\\'")}')">
-      <strong>${p.codigo}</strong> — ${descLimpia}
-    </div>`;
-  }).join('');
-}
-
-function sroElegirProductoBuscado(codigo) {
-  const norm = String(codigo || '').trim().toUpperCase();
-  const p = BD.find(x => x.codigo && x.codigo.trim().toUpperCase() === norm);
-  const msg = document.getElementById('sroCodigoRapidoMsg');
-  if (!p) {
-    if (msg) { msg.textContent = '⚠ Código no encontrado en la BD'; msg.style.color = 'var(--danger)'; msg.style.display = 'block'; }
-    const lista = document.getElementById('sroBuscadorLista');
-    if (lista) lista.innerHTML = '';
-    return;
-  }
-  if (msg) {
-    msg.textContent = `✅ ${p.desc ? p.desc.replace(/^\[.*?\]\s*/,'') : p.codigo}`;
-    msg.style.color = 'var(--success)';
-    msg.style.display = 'block';
-  }
-  document.getElementById('sroClearCodigo').style.display = 'inline-flex';
-  const input = document.getElementById('sroBuscador');
-  if (input) input.value = p.codigo;
-  const lista = document.getElementById('sroBuscadorLista');
-  if (lista) lista.innerHTML = '';
-
-  _fillSroFromProducto(p);
-  _bloquearFiltrosSRO(true);
-  playClick(); vibrate([15]);
 }
 
 function _bloquearFiltrosMO(bloquear) {
@@ -15024,6 +14883,12 @@ const _COLOR_TIPO_RECEPCION = {
   PRODUCCION: { border: '#a855f7',        bg: 'rgba(168,85,247,0.12)', color: '#c084fc'        }  // morado
 };
 
+// Colores distintivos para el botón de Turno en el modal de Reporte de Alertas
+const _COLOR_ALERTA_TURNO = {
+  '1': { border: 'var(--accent2)', bg: 'rgba(59,130,246,0.12)', color: 'var(--accent2)' },  // Turno 1 — azul
+  '2': { border: '#a855f7',        bg: 'rgba(168,85,247,0.12)', color: '#c084fc' }          // Turno 2 — morado
+};
+
 // Sincroniza el texto visible del botón de turno con el valor real del <select> oculto
 function renderTurnoBtn(selectId) {
   const sel = document.getElementById(selectId);
@@ -15041,6 +14906,7 @@ function renderTurnoBtn(selectId) {
   let colorEspecifico = null;
   if (selectId === 'dTipoRecepcion') colorEspecifico = _COLOR_TIPO_RECEPCION[sel.value];
   else if (selectId === 'dTipoOperacion' || selectId === 'sroTipoOperacion') colorEspecifico = colorTipoOpFn(sel.value);
+  else if (selectId === 'alertaTurno') colorEspecifico = _COLOR_ALERTA_TURNO[sel.value];
   if (colorEspecifico) {
     btn.style.borderColor = colorEspecifico.border;
     btn.style.background  = colorEspecifico.bg;
@@ -15174,7 +15040,6 @@ function setMoCalidad(val) {
   document.getElementById('moBtnCalidad1').className = 'q-btn' + (val==='1RA CALIDAD' ? ' active-1ra' : '');
   document.getElementById('moBtnCalidad2').className = 'q-btn' + (val==='2DA CALIDAD' ? ' active-2da' : '');
   moCurrentProduct = null; updateMoProductCard(); resetMoMedida();
-  moBuscarEnVivo();
 }
 
 function onMoTipoChange() { moCurrentProduct=null; updateMoProductCard(); resetMoMedida(); onMoMaterialChange(); }
@@ -15417,8 +15282,14 @@ function agregarLineaMO() {
   if (_esTirasBobinas()) linea.lote = lote;
   moLineas.push(linea);
   renderMoLineas();
-  // Reset del formulario — limpiarCodigoRapido('mo') ya deja Calidad en 1RA por defecto
+  // Reset completo incluyendo calidad
   limpiarCodigoRapido('mo');
+  moCalidad='';
+  document.getElementById('moBtnCalidad1').className='q-btn';
+  document.getElementById('moBtnCalidad2').className='q-btn';
+  document.getElementById('moTipo').value='';
+  document.getElementById('moMaterial').value='';
+  resetMoMedida();
   document.getElementById('moAtados').value='';
   document.getElementById('moSueltas').value='';
   const inpLoteMo = document.getElementById('inputLoteMo');
@@ -15461,7 +15332,7 @@ function quitarLineaMO(idx) {
 //  BNC — Bodega No Conforme (captura independiente, no toca
 //  registros / registrosParcial / mos / sros / Resumen / Dashboard)
 // ══════════════════════════════════════════════════════════
-let bncCalidad = '1RA CALIDAD';
+let bncCalidad = '';
 let bncCurrentProduct = null;
 let bncLineas = [];
 
@@ -15470,7 +15341,6 @@ function setBncCalidad(val) {
   document.getElementById('bncBtnCalidad1').className = 'q-btn' + (val==='1RA CALIDAD' ? ' active-1ra' : '');
   document.getElementById('bncBtnCalidad2').className = 'q-btn' + (val==='2DA CALIDAD' ? ' active-2da' : '');
   bncCurrentProduct = null; updateBncProductCard(); resetBncMedida();
-  bncBuscarEnVivo();
 }
 
 function onBncTipoChange() { bncCurrentProduct=null; updateBncProductCard(); resetBncMedida(); onBncMaterialChange(); }
@@ -15668,75 +15538,33 @@ function evaluarBncSueltas() {
 }
 
 // ── Código rápido BNC ──
-// Buscador en vivo de BNC (reemplaza Código rápido + filtros en cascada) — misma lógica que moBuscarEnVivo.
-function bncBuscarEnVivo() {
-  const q = (document.getElementById('bncBuscador')?.value || '').trim();
-  const lista = document.getElementById('bncBuscadorLista');
+function autoFillBncCodigoRapido() {
+  const codigo = (document.getElementById('bncCodigoRapido')?.value || '').trim().toUpperCase();
   const msg = document.getElementById('bncCodigoRapidoMsg');
-  if (msg) msg.style.display = 'none';
-  if (!lista) return;
-  if (!q) { lista.innerHTML = ''; return; }
-
-  const palabras = _sinTildes(q.toUpperCase()).split(/\s+/).filter(Boolean);
-  const filtrados = (BD || []).filter(p => {
-    if (bncCalidad && p.cal !== bncCalidad) return false;
-    if (!palabras.length) return true;
-    const texto = _sinTildes((p.desc || '').toUpperCase());
-    const codigo = _sinTildes((p.codigo || '').toUpperCase());
-    const coincideDescripcion = palabras.every(w => _fichaTextoContienePalabra(texto, w));
-    const coincideCodigo = palabras.every(w => codigo.includes(w));
-    return coincideDescripcion || coincideCodigo;
-  }).slice(0, 60);
-
-  if (!filtrados.length) {
-    lista.innerHTML = '<div class="empty-hint">Sin resultados en la Tabla PT.</div>';
+  if (!codigo) return;
+  const producto = BD.find(p => (p.codigo || '').toUpperCase() === codigo);
+  if (!producto) {
+    msg.textContent = '⚠ Código no encontrado en la BD';
+    msg.style.color = 'var(--danger)'; msg.style.display = 'block';
+    document.getElementById('bncCodigoRapido').style.borderColor = 'var(--danger)';
     return;
   }
-  lista.innerHTML = filtrados.map(p => {
-    const estilo = _fichaDigitalEstiloCalidad(p.codigo);
-    const descLimpia = (p.desc || '').replace(/^\[.*?\]\s*/, '');
-    return `<div class="torre-candidato-item" style="${estilo}" onclick="bncElegirProductoBuscado('${String(p.codigo).replace(/'/g,"\\'")}')">
-      <strong>${p.codigo}</strong> — ${descLimpia}
-    </div>`;
-  }).join('');
-}
-
-function bncElegirProductoBuscado(codigo) {
-  const norm = String(codigo || '').trim().toUpperCase();
-  const p = BD.find(x => x.codigo && x.codigo.trim().toUpperCase() === norm);
-  const msg = document.getElementById('bncCodigoRapidoMsg');
-  if (!p) {
-    if (msg) { msg.textContent = '⚠ Código no encontrado en la BD'; msg.style.color = 'var(--danger)'; msg.style.display = 'block'; }
-    const lista = document.getElementById('bncBuscadorLista');
-    if (lista) lista.innerHTML = '';
-    return;
-  }
-  if (msg) {
-    msg.textContent = `✅ ${p.desc ? p.desc.replace(/^\[.*?\]\s*/,'') : p.codigo}`;
-    msg.style.color = 'var(--success)';
-    msg.style.display = 'block';
-  }
+  msg.textContent = `✅ ${producto.desc ? producto.desc.replace(/^\[.*?\]\s*/,'') : codigo}`;
+  msg.style.color = 'var(--success)'; msg.style.display = 'block';
+  document.getElementById('bncCodigoRapido').style.borderColor = 'var(--success)';
   document.getElementById('bncClearCodigo').style.display = 'inline-flex';
-  const input = document.getElementById('bncBuscador');
-  if (input) input.value = p.codigo;
-  const lista = document.getElementById('bncBuscadorLista');
-  if (lista) lista.innerHTML = '';
-
-  _fillBncFromProducto(p);
+  _fillBncFromProducto(producto);
   _bloquearFiltrosBNC(true);
-  playClick(); vibrate([15]);
 }
 
 function limpiarBncCodigoRapido() {
-  const input = document.getElementById('bncBuscador');
+  const input = document.getElementById('bncCodigoRapido');
   if (input) { input.value = ''; input.style.borderColor = ''; }
-  const lista = document.getElementById('bncBuscadorLista');
-  if (lista) lista.innerHTML = '';
   const msg = document.getElementById('bncCodigoRapidoMsg');
   if (msg) { msg.style.display = 'none'; msg.textContent = ''; }
   document.getElementById('bncClearCodigo').style.display = 'none';
   _bloquearFiltrosBNC(false);
-  setBncCalidad('1RA CALIDAD'); bncCurrentProduct = null; updateBncProductCard(); resetBncMedida();
+  setBncCalidad(''); bncCurrentProduct = null; updateBncProductCard(); resetBncMedida();
   document.getElementById('bncTipo').value = '';
   document.getElementById('bncMaterial').value = '';
   _syncCycleGroup('bnc');
@@ -16354,8 +16182,14 @@ function agregarLineaSRO() {
   if (_esTirasBobinas()) lineaSro.lote = lote;
   sroLineas.push(lineaSro);
   renderSroLineas();
-  // Reset del formulario — limpiarCodigoRapido('sro') ya deja Calidad en 1RA por defecto
+  // Reset filters
   limpiarCodigoRapido('sro');
+  sroCalidad='';
+  document.getElementById('sroBtnCalidad1').className='q-btn';
+  document.getElementById('sroBtnCalidad2').className='q-btn';
+  document.getElementById('sroTipo').value='';
+  document.getElementById('sroMaterial').value='';
+  resetSroMedida();
   document.getElementById('sroAtados').value='';
   document.getElementById('sroSueltas').value='';
   const inpLoteSro = document.getElementById('inputLoteSro');
@@ -16856,7 +16690,7 @@ let _regAgrTipo = '', _regAgrNumero = '', _regAgrGkey = '', _regAgrTipoOp = '', 
 
 function abrirAgregarItemMO(gkey, numero) {
   _regAgrTipo = 'mo'; _regAgrNumero = numero; _regAgrGkey = gkey; _regAgrTipoOp = '';
-  _regAgrProduct = null; _regAgrCalidad = '1RA CALIDAD';
+  _regAgrProduct = null; _regAgrCalidad = '';
   document.getElementById('registroAgregarTitle').textContent = `➕ Agregar a ENTRADA ${numero}`;
   document.getElementById('regAgrCalidadSection').style.display = 'block';  // MO también pide calidad
   document.getElementById('regAgrQtyMO').style.display  = 'none';           // ya no se usa
@@ -16868,13 +16702,13 @@ function abrirAgregarItemMO(gkey, numero) {
 
 function abrirAgregarItemSRO(gkey, numero, tipoOperacion) {
   _regAgrTipo = 'sro'; _regAgrNumero = numero; _regAgrGkey = gkey; _regAgrTipoOp = tipoOperacion || 'SRO';
-  _regAgrProduct = null; _regAgrCalidad = '1RA CALIDAD';
+  _regAgrProduct = null; _regAgrCalidad = '';
   const etqTipo = _regAgrTipoOp === 'AJUSTE' ? 'AJUSTE' : _regAgrTipoOp;
   document.getElementById('registroAgregarTitle').textContent = `➕ Agregar a ${etqTipo} ${numero}`;
   document.getElementById('regAgrCalidadSection').style.display = 'block';
   document.getElementById('regAgrQtyMO').style.display  = 'none';
   document.getElementById('regAgrQtySRO').style.display = 'block';
-  document.getElementById('regAgrBtn1ra').className = 'q-btn active-1ra';
+  document.getElementById('regAgrBtn1ra').className = 'q-btn';
   document.getElementById('regAgrBtn2da').className = 'q-btn';
   _resetRegAgrForm();
   populateMoSroSelects();
@@ -16882,9 +16716,9 @@ function abrirAgregarItemSRO(gkey, numero, tipoOperacion) {
 }
 
 function _resetRegAgrForm() {
-  // Calidad vuelve a 1RA por defecto
-  _regAgrCalidad = '1RA CALIDAD';
-  document.getElementById('regAgrBtn1ra').className = 'q-btn active-1ra';
+  // Limpiar calidad
+  _regAgrCalidad = '';
+  document.getElementById('regAgrBtn1ra').className = 'q-btn';
   document.getElementById('regAgrBtn2da').className = 'q-btn';
   document.getElementById('regAgrTipo').value = '';
   document.getElementById('regAgrMaterial').value = '';
@@ -16902,71 +16736,35 @@ function _resetRegAgrForm() {
   limpiarRegAgrCodigo();
 }
 
-// Buscador en vivo del modal "Agregar producto" (aplica igual a Entradas/MO y
-// Salidas/SRO, ya que ambas comparten este mismo modal) — filtra por la Calidad
-// activa (_regAgrCalidad, 1RA por defecto) y contra la Tabla PT del área activa (BD).
-function regAgrBuscarEnVivo() {
-  const q = (document.getElementById('regAgrBuscador')?.value || '').trim();
-  const lista = document.getElementById('regAgrBuscadorLista');
+// ── Código rápido — modal "Agregar producto" (aplica igual a Entradas/MO y
+// Salidas/SRO, ya que ambas comparten este mismo modal) ──
+function autoFillRegAgrCodigo() {
+  const codigo = (document.getElementById('regAgrCodigoRapido')?.value || '').trim().toUpperCase();
   const msg = document.getElementById('regAgrCodigoRapidoMsg');
-  if (msg) msg.style.display = 'none';
-  if (!lista) return;
-  if (!q) { lista.innerHTML = ''; return; }
+  if (!codigo) return;
 
-  const palabras = _sinTildes(q.toUpperCase()).split(/\s+/).filter(Boolean);
-  const filtrados = (BD || []).filter(p => {
-    if (_regAgrCalidad && p.cal !== _regAgrCalidad) return false;
-    if (!palabras.length) return true;
-    const texto = _sinTildes((p.desc || '').toUpperCase());
-    const codigo = _sinTildes((p.codigo || '').toUpperCase());
-    const coincideDescripcion = palabras.every(w => _fichaTextoContienePalabra(texto, w));
-    const coincideCodigo = palabras.every(w => codigo.includes(w));
-    return coincideDescripcion || coincideCodigo;
-  }).slice(0, 60);
+  const producto = BD.find(p => (p.codigo || '').toUpperCase() === codigo);
 
-  if (!filtrados.length) {
-    lista.innerHTML = '<div class="empty-hint">Sin resultados en la Tabla PT.</div>';
-    return;
-  }
-  lista.innerHTML = filtrados.map(p => {
-    const estilo = _fichaDigitalEstiloCalidad(p.codigo);
-    const descLimpia = (p.desc || '').replace(/^\[.*?\]\s*/, '');
-    return `<div class="torre-candidato-item" style="${estilo}" onclick="regAgrElegirProductoBuscado('${String(p.codigo).replace(/'/g,"\\'")}')">
-      <strong>${p.codigo}</strong> — ${descLimpia}
-    </div>`;
-  }).join('');
-}
-
-function regAgrElegirProductoBuscado(codigo) {
-  const norm = String(codigo || '').trim().toUpperCase();
-  const p = BD.find(x => x.codigo && x.codigo.trim().toUpperCase() === norm);
-  const msg = document.getElementById('regAgrCodigoRapidoMsg');
-  if (!p) {
-    if (msg) { msg.textContent = '⚠ Código no encontrado en la BD'; msg.style.color = 'var(--danger)'; msg.style.display = 'block'; }
-    const lista = document.getElementById('regAgrBuscadorLista');
-    if (lista) lista.innerHTML = '';
-    return;
-  }
-  if (msg) {
-    msg.textContent = `✅ ${p.desc ? p.desc.replace(/^\[.*?\]\s*/,'') : p.codigo}`;
-    msg.style.color = 'var(--success)';
+  if (!producto) {
+    msg.textContent = '⚠ Código no encontrado en la BD';
+    msg.style.color = 'var(--danger)';
     msg.style.display = 'block';
+    document.getElementById('regAgrCodigoRapido').style.borderColor = 'var(--danger)';
+    return;
   }
-  document.getElementById('regAgrClearCodigo').style.display = 'inline-flex';
-  const input = document.getElementById('regAgrBuscador');
-  if (input) input.value = p.codigo;
-  const lista = document.getElementById('regAgrBuscadorLista');
-  if (lista) lista.innerHTML = '';
 
-  _fillRegAgrFromProducto(p);
-  playClick(); vibrate([15]);
+  msg.textContent = `✅ ${producto.desc ? producto.desc.replace(/^\[.*?\]\s*/,'') : codigo}`;
+  msg.style.color = 'var(--success)';
+  msg.style.display = 'block';
+  document.getElementById('regAgrCodigoRapido').style.borderColor = 'var(--success)';
+  document.getElementById('regAgrClearCodigo').style.display = 'inline-flex';
+
+  _fillRegAgrFromProducto(producto);
 }
 
 function limpiarRegAgrCodigo() {
-  const input = document.getElementById('regAgrBuscador');
+  const input = document.getElementById('regAgrCodigoRapido');
   if (input) { input.value = ''; input.style.borderColor = ''; }
-  const lista = document.getElementById('regAgrBuscadorLista');
-  if (lista) lista.innerHTML = '';
   const msg = document.getElementById('regAgrCodigoRapidoMsg');
   if (msg) { msg.style.display = 'none'; msg.textContent = ''; }
   const clearBtn = document.getElementById('regAgrClearCodigo');
@@ -17038,7 +16836,6 @@ function setRegAgrCalidad(cal) {
   esp.innerHTML='<option value="">— Seleccionar medida —</option>'; esp.disabled=true;
   _regAgrProduct = null; updateRegAgrProductCard();
   onRegAgrMatChange();
-  regAgrBuscarEnVivo();
 }
 
 function onRegAgrTipoChange() {
@@ -17335,7 +17132,6 @@ function setSroCalidad(val) {
   document.getElementById('sroBtnCalidad1').className='q-btn'+(val==='1RA CALIDAD'?' active-1ra':'');
   document.getElementById('sroBtnCalidad2').className='q-btn'+(val==='2DA CALIDAD'?' active-2da':'');
   onSroMaterialChange();
-  sroBuscarEnVivo();
 }
 
 function onSroMaterialChange() {
@@ -19804,11 +19600,7 @@ function _areaDeItemOdoo(it) {
   if (desc.includes('LAMINA'))   return 'lamina';
   if (desc.includes('COSTANERA')) return 'costanera';
   if (desc.includes('TUBO'))     return 'tuberia';
-  // Todo lo que no matchea ninguna palabra clave de las 4 áreas operativas se
-  // clasifica como "Insumos" — es solo una etiqueta de identificación (pintura,
-  // guantes, herramientas, EPP, consumibles, etc.), NO es un área operativa: no
-  // tiene pestañas propias de Conteo/Entradas/Salidas/BNC ni aparece en el login.
-  return 'insumos';
+  return null;
 }
 
 // Etiquetas y colores para mostrar la clasificación de área en el visor de la Base Odoo.
@@ -19816,152 +19608,8 @@ const _ODOO_REF_AREA_INFO = {
   lamina:        { label: 'Lámina',    color: '#22c55e' },
   costanera:     { label: 'Costanera', color: '#f59e0b' },
   tuberia:       { label: 'Tubería',   color: '#3b82f6' },
-  tiras_bobinas: { label: 'Tira/Bobina', color: '#a855f7' },
-  insumos:       { label: 'Insumos',   color: '#64748b' }
+  tiras_bobinas: { label: 'Tira/Bobina', color: '#a855f7' }
 };
-
-// ══════════════════════════════════════════════════════════════
-//  TABLA PT — reconstruida en vivo a partir de la Base Odoo (referencia).
-//  Ya no existe una colección "bd" separada por área con Tipo/Material/Medida/
-//  Espesor capturados a mano: ahora BD se arma filtrando window._odooRef por el
-//  área activa (misma detección automática + corrección manual que usa el
-//  buscador), y los atributos tipo/mat/medida/pies/espesor/cal se DERIVAN de la
-//  descripción y el código (mismo parser que ya usaba "Pegar códigos nuevos"),
-//  solo para uso interno (Resumen, reportes, colores, etc.) — el usuario ya no
-//  los captura ni los ve como columnas separadas. Color, Kg/U y U/Atado sí son
-//  campos reales, guardados en cada ítem de la Base Odoo.
-// ══════════════════════════════════════════════════════════════
-function _reconstruirBDDesdeOdooRef() {
-  const area = window._areaActiva;
-  const universo = window._odooRef || [];
-  BD.length = 0;
-  universo.forEach(it => {
-    if (!it.codigo) return;
-    const itemArea = _areaDeItemOdoo(it);
-    if (itemArea === 'insumos') return; // Insumos nunca alimenta ninguna área operativa
-    if (area === 'bodega_segunda') {
-      if (itemArea === 'tiras_bobinas') return; // Bodega de Segunda no incluye Tiras/Bobinas
-    } else if (itemArea !== area) {
-      return;
-    }
-    const parsed = (typeof _parsearDescripcionProducto === 'function') ? _parsearDescripcionProducto(it.descripcion || '') : {};
-    const calCorta = (typeof _fichaCalidadDeItem === 'function') ? _fichaCalidadDeItem(it) : '1RA';
-    BD.push({
-      id: it.codigo,
-      codigo: it.codigo,
-      desc: `[${it.codigo}] ${it.descripcion || ''}`,
-      cal: calCorta === '2DA' ? '2DA CALIDAD' : '1RA CALIDAD',
-      tipo: parsed.tipo || '',
-      mat: parsed.mat || '',
-      medida: parsed.medida || '',
-      pies: parsed.pies || '',
-      espesor: parsed.espesor || '',
-      color: it.color || 'Sin Color',
-      uAtado: (it.uAtado !== undefined && it.uAtado !== null && it.uAtado !== '') ? it.uAtado : null,
-      pesoKg: (it.pesoKg !== undefined && it.pesoKg !== null && it.pesoKg !== '') ? it.pesoKg : null,
-      area: itemArea,
-      areaManual: !!it.area
-    });
-  });
-  if (document.getElementById('page-bd')?.classList.contains('active')) { renderBD(); }
-  if (typeof currentProduct !== 'undefined' && currentProduct) {
-    const updated = BD.find(p => p.id === currentProduct.id);
-    if (updated) { currentProduct = updated; if (typeof updateProductCard === 'function') updateProductCard(); }
-  }
-}
-
-// ── Guardado de la Base Odoo (referencia) unificada — reemplaza todas las
-// escrituras que antes iban a la colección "bd" retirada (edición inline en la
-// Tabla PT, fotos, borrado). Un solo documento con el arreglo completo, igual
-// patrón que ya usaba _odooRefCambiarArea().
-function _bdOdooGuardarInmediato() {
-  if (!window.fbDb) { showToast('⚠️', 'Sin conexión a Firebase — no se guardó'); return Promise.resolve(); }
-  const usuarioActual = sessionStorage.getItem('perfil') || 'SISTEMA';
-  return colGlobal('odooRef').doc('data').set({
-    items: window._odooRef,
-    count: window._odooRef.length,
-    actualizado: firebase.firestore.FieldValue.serverTimestamp(),
-    actualizadoPor: usuarioActual
-  });
-}
-
-// Edición inline de un campo (área, color, uAtado, pesoKg) desde la Tabla PT —
-// guarda con un pequeño debounce para no disparar una escritura por cada tecla.
-let _bdOdooGuardarTimeout = null;
-function _bdOdooActualizarCampo(codigo, campo, valor) {
-  const it = (window._odooRef || []).find(x => x.codigo === codigo);
-  if (!it) return;
-  if (valor === null || valor === '' || valor === undefined) delete it[campo];
-  else it[campo] = valor;
-  _reconstruirBDDesdeOdooRef(); // refleja el cambio de inmediato en la tabla
-  clearTimeout(_bdOdooGuardarTimeout);
-  _bdOdooGuardarTimeout = setTimeout(() => {
-    _bdOdooGuardarInmediato().catch(() => showToast('⚠️', 'No se pudo guardar el cambio'));
-  }, 600);
-}
-
-function _bdOdooCambiarArea(codigo, valor) {
-  _bdOdooActualizarCampo(codigo, 'area', valor || null);
-}
-function _bdOdooCambiarColor(codigo, valor) {
-  _bdOdooActualizarCampo(codigo, 'color', valor || null);
-}
-function _bdOdooCambiarUAtado(codigo, valor) {
-  const n = parseInt(valor);
-  _bdOdooActualizarCampo(codigo, 'uAtado', (!isNaN(n) && n > 0) ? n : null);
-}
-function _bdOdooCambiarPeso(codigo, valor) {
-  const n = parseFloat(valor);
-  _bdOdooActualizarCampo(codigo, 'pesoKg', (!isNaN(n)) ? Math.round(n * 1000) / 1000 : null);
-}
-
-// ── Modal: Editar Peso (Kg/U) o Unidades/Atado — reemplaza los campos libres de
-// la tabla de Tabla PT. Sin PIN (confirmado explícitamente).
-let _bdEditarValorCodigo = null, _bdEditarValorCampo = null;
-function abrirModalBdEditarValor(codigo, campo) {
-  _bdEditarValorCodigo = codigo;
-  _bdEditarValorCampo = campo;
-  const it = (window._odooRef || []).find(x => x.codigo === codigo);
-  const esPeso = campo === 'pesoKg';
-  document.getElementById('bdEditarValorTitulo').textContent = esPeso ? '⚖️ Peso (Kg/U)' : '📦 Unidades / Atado';
-  document.getElementById('bdEditarValorCodigo').textContent = codigo;
-  const input = document.getElementById('bdEditarValorInput');
-  const actual = it ? it[campo] : null;
-  input.value = (actual !== null && actual !== undefined) ? actual : '';
-  input.step = esPeso ? '0.001' : '1';
-  input.min = esPeso ? '0' : '1';
-  input.placeholder = esPeso ? 'ej: 17.31' : 'ej: 25';
-  _openModal('modalBdEditarValor');
-  setTimeout(() => input.focus(), 150);
-}
-function guardarBdEditarValor() {
-  const valorStr = document.getElementById('bdEditarValorInput').value;
-  if (_bdEditarValorCampo === 'pesoKg') _bdOdooCambiarPeso(_bdEditarValorCodigo, valorStr);
-  else _bdOdooCambiarUAtado(_bdEditarValorCodigo, valorStr);
-  closeModal('modalBdEditarValor');
-  playClick(); vibrate([15]);
-}
-
-// ── Modal: Elegir Color — reemplaza el select desplegable de la tabla de Tabla PT
-let _bdEditarColorCodigo = null;
-function abrirModalBdEditarColor(codigo) {
-  _bdEditarColorCodigo = codigo;
-  document.getElementById('bdEditarColorCodigo').textContent = codigo;
-  const opciones = _opcionesColorPorArea();
-  const it = (window._odooRef || []).find(x => x.codigo === codigo);
-  const actual = it ? it.color : null;
-  document.getElementById('bdEditarColorLista').innerHTML = opciones.map(c => {
-    const hex = colorMap[c] || '#64748b';
-    const esActual = actual === c;
-    return `<button type="button" onclick="_bdOdooCambiarColor('${codigo.replace(/'/g,"\\'")}', '${c.replace(/'/g,"\\'")}'); closeModal('modalBdEditarColor')"
-      style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 8px;border-radius:9px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.02em;
-      background:${hex}2a;border:2px solid ${esActual ? hex : 'var(--border)'};color:${esActual ? hex : 'var(--text)'}">
-      <span style="width:11px;height:11px;border-radius:50%;background:${hex};border:1px solid rgba(255,255,255,0.2);flex-shrink:0"></span>
-      ${c}
-    </button>`;
-  }).join('');
-  _openModal('modalBdEditarColor');
-}
 
 // Busca sobre la Base Odoo (referencia, más completa) — igual que el buscador de la Ficha
 // Digital del Mapa.
@@ -23225,7 +22873,10 @@ function resaltarAreaActiva(areaForzada) {
   // oculta la tarjeta por completo en la pantalla de selección de perfil (escritorio y móvil
   // comparten esta misma pantalla, no hay una versión aparte para cada uno).
   const esAreaSinSalida = area === 'tiras_bobinas' || area === 'auditoria';
-  if (cardTransporte) cardTransporte.style.display = esAreaSinTransporte ? 'none' : '';
+  // La tarjeta de Transporte se retiró de la pantalla de selección de perfil (queda oculta
+  // en toda área); su lugar en el grid lo ocupa la tarjeta de Reporte de Alertas, que es
+  // siempre visible. El perfil "transporte" y su lógica interna no se tocaron.
+  if (cardTransporte) cardTransporte.style.display = 'none';
   if (cardSalida) cardSalida.style.display = esAreaSinSalida ? 'none' : '';
   // En Auditoría, la única tarjeta de perfil visible (Inventario) se renombra a
   // "Registro de Operaciones" — en las demás áreas conserva su texto normal.
@@ -23234,7 +22885,8 @@ function resaltarAreaActiva(areaForzada) {
   const cardInventarioTxt = document.getElementById('cardInventario')?.querySelector('div:last-child');
   if (cardInventarioTxt) cardInventarioTxt.innerHTML = (area === 'auditoria') ? 'Registro de<br>Operaciones' : 'Verificador<br>Inventario';
   if (perfilGrid) {
-    const visibles = 3 - (esAreaSinTransporte ? 1 : 0) - (esAreaSinSalida ? 1 : 0);
+    // Base: Inventario + Alerta siempre visibles, más Operaciones salvo en áreas donde no aplica.
+    const visibles = 3 - (esAreaSinSalida ? 1 : 0);
     perfilGrid.style.gridTemplateColumns = visibles === 3 ? '1fr 1fr 1fr' : visibles === 2 ? '1fr 1fr' : '1fr';
   }
   if (tabTransporteHeader) tabTransporteHeader.style.display = esAreaSinTransporte ? 'none' : '';
@@ -23491,14 +23143,13 @@ function aplicarPerfilVisualidad() {
     if (el) el.style.display = (esAreaLamina && currentPerfil !== 'salida' && currentPerfil !== 'transporte') ? '' : 'none';
   });
 
-  // Botón "Generar códigos cortos" en Tabla PT — RETIRADO (se eliminó el Código Corto)
+  // Botón "Generar códigos cortos" en Tabla PT — exclusivo de Lámina
   const btnCodigosCortos = document.getElementById('btnGenerarCodigosCortos');
-  if (btnCodigosCortos) btnCodigosCortos.style.display = 'none';
+  if (btnCodigosCortos) btnCodigosCortos.style.display = esAreaLamina ? '' : 'none';
 
-  // Botón "Cargar base Odoo (Tiras)" en Tabla PT — RETIRADO (escribía en la colección
-  // "bd" ya retirada; usar "📥 Importar catálogo (Excel)" en su lugar)
+  // Botón "Cargar base Odoo (Tiras)" en Tabla PT — exclusivo de Tiras de Bobinas
   const btnCargarBaseTiras = document.getElementById('btnCargarBaseTiras');
-  if (btnCargarBaseTiras) btnCargarBaseTiras.style.display = 'none';
+  if (btnCargarBaseTiras) btnCargarBaseTiras.style.display = (areaActivaActual() === 'tiras_bobinas') ? '' : 'none';
 
   // Botón "Ocultar/Mostrar columnas extra" en Tabla PT — exclusivo de Tiras de Bobinas
   const btnToggleColsTiras = document.getElementById('btnToggleColsTiras');
@@ -24432,108 +24083,6 @@ async function procesarOdooRefAgregar() {
   }
 }
 
-// ── Importar catálogo masivo desde Excel (columnas Producto + Peso) a la Base Odoo
-// (referencia) unificada. Formato esperado en "Producto": "[código] Descripción"
-// (igual al reporte Quants de Odoo). SUMA — nunca borra ni pisa código, color,
-// peso o unidades/atado ya existentes; solo agrega los códigos nuevos, con su
-// peso tomado del Excel. Color y Unidades/Atado quedan vacíos para completarse
-// manualmente después desde la Tabla PT (según lo pedido).
-function importarCatalogoOdooExcel(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const inputEl = event.target;
-
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    try {
-      const wb = XLSX.read(e.target.result, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-      inputEl.value = ''; // permitir volver a elegir el mismo archivo después
-
-      if (data.length < 2) { showToast('⚠️', 'El archivo parece estar vacío'); return; }
-
-      const headers = data[0].map(h => String(h || '').toLowerCase());
-      const idxProd = headers.findIndex(h => /producto|product/.test(h));
-      const idxPeso = headers.findIndex(h => /peso|kg|weight/.test(h));
-      if (idxProd === -1) { showToast('⚠️', 'No se encontró la columna "Producto"'); return; }
-
-      const existentes = window._odooRef || [];
-      const existentesSet = new Set(existentes.map(it => (it.codigo || '').trim().toUpperCase()));
-      const vistosEnArchivo = new Set();
-      const nuevos = [];
-      let yaExisten = 0, sinFormato = 0;
-
-      data.slice(1).forEach(row => {
-        const prod = String(row[idxProd] || '').trim();
-        if (!prod) return;
-        const m = prod.match(/^\[([^\]]+)\]\s*(.*)$/);
-        if (!m) { sinFormato++; return; }
-        const codigo = m[1].trim();
-        const descripcion = m[2].trim();
-        const norm = codigo.toUpperCase();
-        if (existentesSet.has(norm) || vistosEnArchivo.has(norm)) { yaExisten++; return; }
-        vistosEnArchivo.add(norm);
-        const pesoRaw = idxPeso !== -1 ? row[idxPeso] : '';
-        const pesoKg = (pesoRaw !== '' && !isNaN(parseFloat(pesoRaw))) ? Math.round(parseFloat(pesoRaw) * 1000) / 1000 : null;
-        nuevos.push({ codigo, descripcion, pesoKg });
-      });
-
-      if (!nuevos.length) {
-        showToast('⚠️', `Sin códigos nuevos que agregar (${yaExisten} ya existían${sinFormato ? `, ${sinFormato} sin formato "[código] Descripción"` : ''})`);
-        return;
-      }
-
-      if (!window.fbDb) { showToast('⚠️', 'Sin conexión a Firebase'); return; }
-      _mostrarOverlayRegistro(`Importando ${nuevos.length} código(s)...`);
-      const listaFinal = [...existentes, ...nuevos];
-      const usuarioActual = sessionStorage.getItem('perfil') || 'SISTEMA';
-      await colGlobal('odooRef').doc('data').set({
-        items: listaFinal,
-        count: listaFinal.length,
-        actualizado: firebase.firestore.FieldValue.serverTimestamp(),
-        actualizadoPor: usuarioActual
-      });
-      _ocultarOverlayRegistro();
-      playSuccess(); vibrate([30, 15, 30]);
-      let msg = `✅ ${nuevos.length} código(s) nuevo(s) importado(s)`;
-      if (yaExisten) msg += ` — ${yaExisten} ya existían y no se tocaron`;
-      if (sinFormato) msg += ` — ${sinFormato} sin el formato "[código] Descripción"`;
-      showToast('✅', msg);
-    } catch (err) {
-      _ocultarOverlayRegistro();
-      showToast('⚠️', 'Error al importar: ' + (err.message || err));
-      console.error('Error importando catálogo Odoo:', err);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-// ── Eliminar TODOS los códigos de la Base Odoo (referencia) unificada — acción
-// global, afecta a TODAS las áreas a la vez (no solo la activa), porque la Base
-// Odoo es una sola colección compartida. Protegida con PIN de borrado.
-function eliminarTodaBaseOdoo() {
-  const total = (window._odooRef || []).length;
-  if (!total) { showToast('⚠️', 'La Base Odoo ya está vacía'); return; }
-  pedirPinBorrado(
-    'Eliminar TODOS los códigos',
-    `Esto va a eliminar los ${total.toLocaleString()} código(s) de la Base Odoo — de TODAS las áreas (Tubería, Costanera, Lámina, Tiras/Bobinas, Insumos). No se puede deshacer. Ingresa el código de confirmación.`,
-    async () => {
-      if (!window.fbDb) { showToast('⚠️', 'Sin conexión'); return; }
-      _mostrarOverlayRegistro('Eliminando toda la Base Odoo...');
-      try {
-        window._odooRef = [];
-        await _bdOdooGuardarInmediato();
-        _ocultarOverlayRegistro();
-        playError(); vibrate([80,30,80,30,80]);
-        showToast('🗑', `Se eliminaron los ${total.toLocaleString()} código(s) de la Base Odoo`);
-      } catch (e) {
-        _ocultarOverlayRegistro();
-        showToast('⚠️', 'Error al eliminar: ' + (e.message || e));
-      }
-    }
-  );
-}
 
 function abrirModalVerOdooRef() {
   document.getElementById('odooRefBuscador').value = '';
@@ -24578,7 +24127,6 @@ function _filtrarOdooRefVisor() {
           <option value="costanera" ${it.area==='costanera' ? 'selected' : ''}>Costanera</option>
           <option value="tuberia" ${it.area==='tuberia' ? 'selected' : ''}>Tubería</option>
           <option value="tiras_bobinas" ${it.area==='tiras_bobinas' ? 'selected' : ''}>Tira/Bobina</option>
-          <option value="insumos" ${it.area==='insumos' ? 'selected' : ''}>Insumos</option>
         </select>
       </div>
     </div>
@@ -24769,68 +24317,43 @@ async function _crearProductosDesdeTextos(textos) {
 function _parsearDescripcionProducto(descSinPrefijo) {
   const d = descSinPrefijo;
   let tipo = null, mat = null, medida = null, pies = null, espesor = null;
-  // Material: acepta "galvanizado/galvanizada" completo o "Galv." abreviado (muy común en Odoo)
-  const _esGalvanizado = (t) => /galvaniz|galv\./i.test(t);
 
   const mEsp = d.match(/(\d+\.\d+)\s*mm/i);
   if (mEsp) espesor = mEsp[1] + ' mm';
 
-  if (/proceso/i.test(d) || /mec[aá]nico/i.test(d)) {
+  if (/proceso/i.test(d)) {
     tipo = 'MECANICO';
-    // Tubo Proceso/Mecánico: si la descripción no especifica material, se asume
-    // NEGRO por defecto (decisión explícita — la mayoría de estos códigos no
-    // llevan la palabra "negro"/"galvanizado" en Odoo, pero siempre son negro).
-    mat = _esGalvanizado(d) ? 'GALVANIZADO' : 'NEGRO';
+    mat = /negro/i.test(d) ? 'NEGRO' : (/galvanizad/i.test(d) ? 'GALVANIZADO' : null);
     const mDiam = d.match(/(\d+(?:\s\d\/\d)?\s*")/);
     medida = mDiam ? mDiam[1].trim() : null;
-  } else if (/^\s*tira/i.test(d) || /tira\s+l[aá]mina/i.test(d) || /^\s*bobina/i.test(d)) {
-    // "Tira Lámina..." y "Bobina..." son la misma familia (Tiras de Bobinas) — mismo tipo canónico
+  } else if (/^\s*tira/i.test(d) || /tira\s+l[aá]mina/i.test(d)) {
     tipo = 'TIRA LAMINA';
-    mat = /aluzinc/i.test(d) ? 'ALUZINC' : (_esGalvanizado(d) ? 'GALVANIZADO' : null);
+    mat = /aluzinc/i.test(d) ? 'ALUZINC' : (/galvanizad/i.test(d) ? 'GALVANIZADO' : null);
   } else if (/l[aá]mina/i.test(d)) {
-    mat = /aluzinc/i.test(d) ? 'ALUZINC' : (_esGalvanizado(d) ? 'GALVANIZADO' : null);
+    mat = /aluzinc/i.test(d) ? 'ALUZINC' : (/galvanizad/i.test(d) ? 'GALVANIZADO' : null);
     if (/ondulada/i.test(d)) tipo = 'ONDULADA';
-    else if (/troquelada/i.test(d)) {
-      if (/rojo|roja/i.test(d))        tipo = 'TROQUELADA ROJA';
-      else if (/blanco|blanca/i.test(d)) tipo = 'TROQUELADA BLANCA';
-      else                              tipo = 'TROQUELADA';
-    }
-    else if (/\blisa\b/i.test(d)) {
-      if (/suave/i.test(d))              tipo = 'LISA SUAVE';
-      else if (/fr[ií]a/i.test(d))       tipo = 'LISA FRÍA';
-      else if (/rojo|roja/i.test(d))     tipo = 'LISA ROJA';
-      else if (/blanco|blanca/i.test(d)) tipo = 'LISA BLANCA';
-      else                               tipo = 'LISA';
-      // Lisa Fría siempre es GALVANIZADO (confirmado explícitamente), sin importar
-      // si la descripción de Odoo lo menciona o no.
-      if (tipo === 'LISA FRÍA') mat = 'GALVANIZADO';
-      // La familia Lisa lleva Medida (ancho x largo, ej. "3X8", "4X10") — las demás no.
-      const mMedLisa = d.match(/(\d+\s*[xX]\s*\d+)/);
-      if (mMedLisa) medida = mMedLisa[1].replace(/\s+/g, '').toUpperCase();
-    }
+    else if (/troquelada\s+blanca/i.test(d)) tipo = 'TROQUELADA BLANCA';
+    else if (/troquelada\s+roja/i.test(d))   tipo = 'TROQUELADA ROJA';
+    else if (/troquelada/i.test(d))          tipo = 'TROQUELADA';
+    else if (/lisa\s+blanca/i.test(d))       tipo = 'LISA BLANCA';
+    else if (/lisa\s+roja/i.test(d))         tipo = 'LISA ROJA';
+    else if (/lisa\s+fr[ií]a/i.test(d))      tipo = 'LISA FRÍA';
+    else if (/lisa\s+suave/i.test(d))        tipo = 'LISA SUAVE';
+    else if (/lisa/i.test(d))                tipo = 'LISA';
     const mPies = d.match(/(\d+)\s*pies/i);
     if (mPies) pies = String(parseInt(mPies[1], 10));
   } else if (/costanera/i.test(d)) {
     tipo = 'COSTANERA';
-    mat = /negr/i.test(d) ? 'NEGRO' : (_esGalvanizado(d) ? 'GALVANIZADO' : null);
+    mat = /negr/i.test(d) ? 'NEGRO' : (/galvanizad/i.test(d) ? 'GALVANIZADO' : null);
     const mMed = d.match(/(\d+\s*[xX]\s*\d+)/);
     if (mMed) medida = mMed[1].replace(/\s+/g, '').toUpperCase();
   } else if (/tubo/i.test(d)) {
-    // Si no especifica material, se asume NEGRO por defecto (confirmado explícitamente
-    // — aplica a "Tubo Industrial" y otros tubos sin material mencionado en Odoo).
-    mat = _esGalvanizado(d) ? 'GALVANIZADO' : 'NEGRO';
+    mat = /negr/i.test(d) ? 'NEGRO' : (/galvanizad/i.test(d) ? 'GALVANIZADO' : null);
     if (/cuadrado/i.test(d))         tipo = 'CUADRADO';
     else if (/rectangular/i.test(d)) tipo = 'RECTANGULAR';
     else if (/redondo/i.test(d))     tipo = 'REDONDO';
-    else if (/liso/i.test(d))        tipo = 'LISO CERCA';
-    if (tipo === 'LISO CERCA') {
-      // "Liso Cerca" usa diámetro en pulgadas (ej: 1 1/2", 2"), no ancho x alto
-      const mDiam = d.match(/(\d+(?:\s\d\/\d)?\s*")/);
-      medida = mDiam ? mDiam[1].trim() : null;
-    } else {
-      const mMed = d.match(/(\d+\s*[xX]\s*\d+)/);
-      if (mMed) medida = mMed[1].replace(/\s+/g, '').toUpperCase();
-    }
+    const mMed = d.match(/(\d+\s*[xX]\s*\d+)/);
+    if (mMed) medida = mMed[1].replace(/\s+/g, '').toUpperCase();
   }
 
   return { tipo, mat, medida, pies, espesor, reconocido: !!(tipo && mat) };
@@ -26225,12 +25748,12 @@ async function compartirTransporteWhatsApp(t) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyDtAJG6yk_xRe2SKFwqVvT4UHfUXo5UZrQ",
-  authDomain: "condor-pt-v2.firebaseapp.com",
-  projectId: "condor-pt-v2",
-  storageBucket: "condor-pt-v2.firebasestorage.app",
-  messagingSenderId: "246227199482",
-  appId: "1:246227199482:web:a09b3660d92426ec31b043"
+  apiKey: "AIzaSyAPou85qtnilsYyLBZtMcUHShlB8nWRtD0",
+  authDomain: "conteo-pt.firebaseapp.com",
+  projectId: "conteo-pt",
+  storageBucket: "conteo-pt.firebasestorage.app",
+  messagingSenderId: "21998021643",
+  appId: "1:21998021643:web:f23c0a5fbde123834c2b0e"
 });
 
 const fbDb = firebase.firestore();
@@ -27541,93 +27064,6 @@ async function guardarMovimientosOdoo() {
   }
 }
 
-// ══════════════════════════════════════════════════════
-//  REGISTRAR MOVIMIENTO — alta manual de UNA fila, se agrega
-//  al final del historial de "Ver movimientos" (mismo flujo/shape
-//  que usan las filas parseadas desde Odoo/Excel).
-// ══════════════════════════════════════════════════════
-let _regMovTipo = null;
-
-function abrirRegistrarMovimientoManual() {
-  document.getElementById('regMovCodigo').textContent = _movOdooCodigoActual;
-  document.getElementById('regMovFecha').value = new Date().toLocaleDateString('es-GT');
-  document.getElementById('regMovReferencia').value = '';
-  document.getElementById('regMovCantidad').value = '';
-  document.getElementById('regMovMsg').textContent = '';
-  _regMovTipo = null;
-  _regMovActualizarBotonesTipo();
-  document.getElementById('modalRegistrarMovimientoManual').classList.add('open');
-  setTimeout(() => document.getElementById('regMovReferencia').focus(), 150);
-}
-
-function cerrarRegistrarMovimientoManual() {
-  document.getElementById('modalRegistrarMovimientoManual').classList.remove('open');
-}
-
-function _regMovSetTipo(tipo) {
-  _regMovTipo = tipo;
-  _regMovActualizarBotonesTipo();
-}
-
-function _regMovActualizarBotonesTipo() {
-  const btnEntrada = document.getElementById('regMovBtnEntrada');
-  const btnSalida  = document.getElementById('regMovBtnSalida');
-  btnEntrada.className = 'q-btn' + (_regMovTipo === 'Entrada' ? ' active-general' : '');
-  btnSalida.className  = 'q-btn' + (_regMovTipo === 'Salida'  ? ' active-1ra'     : '');
-}
-
-async function guardarRegistrarMovimientoManual() {
-  const msg = document.getElementById('regMovMsg');
-  msg.textContent = '';
-
-  const codigo    = _movOdooCodigoActual;
-  const fecha     = document.getElementById('regMovFecha').value.trim();
-  const referencia = document.getElementById('regMovReferencia').value.trim();
-  const cantidadRaw = document.getElementById('regMovCantidad').value.trim();
-  const cantidad  = parseFloat(String(cantidadRaw).replace(/,/g, ''));
-
-  if (!referencia)               { msg.textContent = '⚠️ Ingresa la referencia'; return; }
-  if (!_regMovTipo)               { msg.textContent = '⚠️ Selecciona Entrada o Salida'; return; }
-  if (!cantidadRaw || isNaN(cantidad) || cantidad <= 0) { msg.textContent = '⚠️ Ingresa una cantidad válida'; return; }
-  if (!window.fbDb)               { msg.textContent = '⚠️ Sin conexión a Firebase'; return; }
-
-  const existentes = window._movimientosOdoo[codigo] || [];
-  const ultimoSaldo = existentes.length ? Number(existentes[existentes.length - 1].saldo || 0) : 0;
-  const nuevoSaldo  = _regMovTipo === 'Entrada' ? ultimoSaldo + cantidad : ultimoSaldo - cantidad;
-
-  const nuevaFila = {
-    fecha,
-    referencia,
-    obs: '',
-    tipo: _regMovTipo,
-    entradas: _regMovTipo === 'Entrada' ? cantidad : '',
-    salidas:  _regMovTipo === 'Salida'  ? cantidad : '',
-    origen: '',
-    produccion: '',
-    saldo: nuevoSaldo,
-    estado: 2, // ✅ Completada por defecto
-  };
-
-  const btn = document.querySelector('#modalRegistrarMovimientoManual .btn-primary');
-  btn.disabled = true;
-  btn.textContent = '⏳ Guardando...';
-
-  try {
-    const nuevas = [...existentes, nuevaFila];
-    await colArea('movimientosOdoo').doc(codigo).set({ filas: nuevas });
-    window._movimientosOdoo[codigo] = nuevas;
-    showToast('👽', 'Movimiento registrado');
-    cerrarRegistrarMovimientoManual();
-    _movOdooRenderVer();
-  } catch(err) {
-    msg.textContent = '⚠️ Error al guardar: ' + err.message;
-    console.error(err);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '💾 Guardar';
-  }
-}
-
 // Exponer funciones al scope global
 window.abrirMovimientosOdoo   = abrirMovimientosOdoo;
 window.cerrarMovimientosOdoo  = cerrarMovimientosOdoo;
@@ -27643,10 +27079,6 @@ window._movOdooCerrarComentario  = _movOdooCerrarComentario;
 window._movOdooGuardarComentario = _movOdooGuardarComentario;
 window.parsearPegadoOdoo      = parsearPegadoOdoo;
 window.guardarMovimientosOdoo = guardarMovimientosOdoo;
-window.abrirRegistrarMovimientoManual  = abrirRegistrarMovimientoManual;
-window.cerrarRegistrarMovimientoManual = cerrarRegistrarMovimientoManual;
-window._regMovSetTipo            = _regMovSetTipo;
-window.guardarRegistrarMovimientoManual = guardarRegistrarMovimientoManual;
 
 // ══════════════════════════════
 //  CHAT DEL EQUIPO
@@ -28003,24 +27435,40 @@ colArea('config').doc('bnc_clasificacion').onSnapshot(snap => {
   if (document.getElementById('page-bnc')?.classList.contains('active')) renderResumenBNC();
 });
 
-// ── Listener: colección "bd" vieja (RETIRADA) ──
-// La Tabla PT ya NO se alimenta de esta colección — ahora se reconstruye desde
-// la Base Odoo (referencia) vía _reconstruirBDDesdeOdooRef() (ver el listener de
-// 'odooRef' más abajo). Se deja este listener sin tocar BD para no generar una
-// condición de carrera entre dos fuentes escribiendo la misma variable global —
-// simplemente ya no se vuelve a escribir en esta colección.
-colArea('bd').onSnapshot(snapshot => {}, () => {});
+// ── Listener: Tabla PT (BD) ──
+// NOTA: se eliminó la siembra automática de productos por defecto.
+// Antes existía un bloque que hacía batch.set() completo sobre los
+// documentos "1","2","3"... si el listener recibía un snapshot vacío
+// transitorio (mala conexión, caché no sincronizada, etc.) — eso borraba
+// pesoKg/fotoUrl. Ahora los productos se cargan y editan manualmente,
+// así que el listener solo lee.
+colArea('bd').onSnapshot(snapshot => {
+  BD.length = 0;
+  snapshot.docs.forEach(d => {
+    const data = d.data();
+    // Normalizar medida al leer — unifica comillas tipográficas y espacios
+    if (data.medida) {
+      data.medida = data.medida.trim().toUpperCase()
+        .replace(/[‘’‚‛′‵]/g, "'")
+        .replace(/[“”„‟″‶]/g, '"')
+        .replace(/\s+/g, ' ');
+    }
+    BD.push({ id: d.id, ...data });
+  });
+  if (document.getElementById('page-bd').classList.contains('active')) { construirBDChips(); renderBD(); }
+  if (currentProduct) {
+    const updated = BD.find(p => p.id === currentProduct.id);
+    if (updated) { currentProduct = updated; updateProductCard(); }
+  }
+  limpiarMedidasFirestore();
+}, () => {});
 
 // ── Listener: Base Odoo (referencia) — global a la planta, no por área ──
-// Ahora es la ÚNICA fuente que alimenta la Tabla PT (BD): cada cambio aquí
-// dispara _reconstruirBDDesdeOdooRef(), que filtra por el área activa.
 colGlobal('odooRef').doc('data').onSnapshot(snap => {
   const d = snap.exists ? snap.data() : null;
   window._odooRef = (d && Array.isArray(d.items)) ? d.items : [];
   const badge = document.getElementById('odooRefBadge');
   if (badge) badge.textContent = window._odooRef.length ? `(${window._odooRef.length.toLocaleString()})` : '';
-  _reconstruirBDDesdeOdooRef();
-  limpiarMedidasFirestore();
 }, () => {});
 
 // ── Listener: Datos Odoo ──
@@ -29120,10 +28568,7 @@ renderConexionEstado();
 
       <!-- Panel VER -->
       <div id="movOdooPanelVer">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:0.75rem">
-          <div style="font-size:0.75rem;color:var(--muted)" id="movOdooVerCount"></div>
-          <button class="btn btn-primary btn-sm" onclick="abrirRegistrarMovimientoManual()" style="width:auto;padding:6px 14px;font-size:0.78rem">➕ Registrar movimiento</button>
-        </div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.75rem" id="movOdooVerCount"></div>
         <div class="mov-tabla-wrap">
           <table class="mov-tabla">
             <thead>
@@ -29198,53 +28643,6 @@ renderConexionEstado();
       </div>
 
     </div><!-- /mov-body -->
-  </div>
-</div>
-
-<!-- MODAL: Registrar Movimiento manual — se agrega al final del historial de "Ver movimientos" -->
-<div class="modal-overlay" id="modalRegistrarMovimientoManual" style="z-index:370" onclick="if(event.target===this)cerrarRegistrarMovimientoManual()">
-  <div class="modal">
-    <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1.1rem">
-      <span style="font-size:1.7rem;line-height:1">👽</span>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.15rem;text-transform:uppercase;letter-spacing:0.04em">Registrar Movimiento</div>
-    </div>
-
-    <div style="font-size:0.85rem;color:var(--muted);margin-bottom:2px">Código</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;color:var(--accent);margin-bottom:1rem" id="regMovCodigo"></div>
-
-    <div class="field">
-      <label>Fecha</label>
-      <input type="text" autocapitalize="off" id="regMovFecha" placeholder="dd/mm/aaaa" autocomplete="off">
-    </div>
-
-    <div class="field">
-      <label>Referencia</label>
-      <input type="text" autocapitalize="off" id="regMovReferencia" placeholder="Ej. BSM/MO/08010" autocomplete="off"
-        oninput="const s=this.selectionStart,e=this.selectionEnd;this.value=this.value.toUpperCase();this.setSelectionRange(s,e);">
-    </div>
-
-    <div class="field">
-      <label>Tipo</label>
-      <div style="display:flex;gap:8px">
-        <button type="button" class="q-btn" id="regMovBtnEntrada" onclick="_regMovSetTipo('Entrada')" style="flex:1">📥 Entrada</button>
-        <button type="button" class="q-btn" id="regMovBtnSalida" onclick="_regMovSetTipo('Salida')" style="flex:1">📤 Salida</button>
-      </div>
-    </div>
-
-    <div class="field">
-      <label>Cantidad</label>
-      <input type="text" autocapitalize="off" id="regMovCantidad" placeholder="0" inputmode="numeric" autocomplete="off"
-        onkeydown="if(event.key==='Enter'){event.preventDefault();guardarRegistrarMovimientoManual();}">
-    </div>
-
-    <div style="font-size:0.78rem;color:var(--muted);margin-bottom:0.5rem">Estado: <span style="color:var(--success);font-weight:700">✅ Completada</span> (por defecto)</div>
-
-    <div id="regMovMsg" style="font-size:0.82rem;color:var(--danger);min-height:1.2em;margin-bottom:0.5rem"></div>
-
-    <div class="modal-btns">
-      <button class="btn btn-ghost" onclick="cerrarRegistrarMovimientoManual()">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarRegistrarMovimientoManual()">💾 Guardar</button>
-    </div>
   </div>
 </div>
 
@@ -31635,9 +31033,8 @@ async function subirFotoProducto(event) {
       );
     });
     const url = await ref.getDownloadURL();
-    const it = (window._odooRef || []).find(x => x.codigo === _fotoProductoId);
-    if (it) it[campo] = url;
-    await _bdOdooGuardarInmediato();
+    const colRef = window.colArea('bd');
+    await colRef.doc(_fotoProductoId).update({ [campo]: url });
     const idx = BD.findIndex(x => String(x.id) === _fotoProductoId);
     if (idx !== -1) BD[idx][campo] = url;
     renderBD();
@@ -31660,9 +31057,8 @@ async function eliminarFotoProducto(slot) {
   if (!(await appConfirm('¿Eliminar la Foto ' + slot + ' de este producto?', { titulo: 'Eliminar foto', danger: true, textoAceptar: '🗑 Eliminar' }))) return;
   try { await window.fbStorage.refFromURL(p[campo]).delete(); } catch(e) {}
   try {
-    const it = (window._odooRef || []).find(x => x.codigo === _fotoProductoId);
-    if (it) delete it[campo];
-    await _bdOdooGuardarInmediato();
+    const colRef = window.colArea('bd');
+    await colRef.doc(_fotoProductoId).update({ [campo]: firebase.firestore.FieldValue.delete() });
     const idx = BD.findIndex(x => String(x.id) === _fotoProductoId);
     if (idx !== -1) delete BD[idx][campo];
     renderBD();
@@ -31737,7 +31133,7 @@ async function eliminarFotoProducto(slot) {
 </div>
 
 <!-- ══════════ MODAL: Nueva Alerta 🚨 ══════════ -->
-<div class="modal-overlay" id="modalAlerta" onclick="if(event.target===this)cerrarModalAlerta()">
+<div class="modal-overlay" id="modalAlerta" style="z-index:1000" onclick="if(event.target===this)cerrarModalAlerta()">
   <div class="modal modal-wide" style="max-width:560px;width:95vw;position:relative">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem">
       <div style="display:flex;align-items:center;gap:10px">
@@ -31749,8 +31145,12 @@ async function eliminarFotoProducto(slot) {
 
     <div class="field">
       <label>Nombre *</label>
-      <input type="text" autocapitalize="off" id="alertaNombre" placeholder="Nombre de quien reporta"
-        style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);padding:10px 14px;font-family:'Barlow',sans-serif;font-size:1rem">
+      <div style="display:flex;gap:8px">
+        <input type="text" autocapitalize="off" id="alertaNombre" placeholder="Toca para elegir un nombre" readonly onclick="abrirListaNombresAlerta()"
+          style="flex:1;min-width:0;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);padding:10px 14px;font-family:'Barlow',sans-serif;font-size:1rem;cursor:pointer">
+        <button type="button" onclick="abrirListaNombresAlerta()" title="Elegir de la lista"
+          style="flex-shrink:0;width:44px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center">👥</button>
+      </div>
     </div>
 
     <div style="display:flex;gap:12px;margin-bottom:0.9rem;flex-wrap:wrap">
@@ -31761,6 +31161,15 @@ async function eliminarFotoProducto(slot) {
       <div style="flex:1;min-width:170px">
         <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px">Fecha y hora</div>
         <div id="alertaFechaTxt" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px"></div>
+      </div>
+      <div style="flex:1;min-width:140px">
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px">Turno *</div>
+        <select id="alertaTurno" class="cycle-hidden-select">
+          <option value="">— Seleccionar —</option>
+          <option value="1">Turno 1</option>
+          <option value="2">Turno 2</option>
+        </select>
+        <button type="button" class="cycle-btn cycle-btn-turno" id="btn_alertaTurno" onclick="cycleTurnoBtn('alertaTurno')"><span id="lbl_alertaTurno">— Seleccionar —</span></button>
       </div>
     </div>
 
@@ -31783,8 +31192,9 @@ async function eliminarFotoProducto(slot) {
       <input type="file" id="alertaFotoGalInput" accept="image/*" multiple style="display:none" onchange="agregarFotosAlerta(event)">
     </div>
 
-    <div id="alertaGuardando" style="display:none;width:100%;text-align:center;margin-bottom:0.8rem">
-      <div style="font-size:0.88rem;color:var(--text);font-weight:500" id="alertaGuardandoMsg">Guardando alerta...</div>
+    <div id="alertaGuardando" style="display:none;position:absolute;inset:0;background:var(--surface);border-radius:14px;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:5">
+      <div style="width:56px;height:56px;border:4px solid rgba(245,158,11,0.25);border-top-color:var(--accent);border-radius:50%;animation:spinOverlay 0.8s linear infinite"></div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.05rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--text)" id="alertaGuardandoMsg">Guardando alerta...</div>
     </div>
 
     <div class="modal-btns-1" style="display:flex;gap:10px">
@@ -31802,6 +31212,27 @@ async function eliminarFotoProducto(slot) {
     </div>
   </div>
 <style>@keyframes alertaExitoPop { from { transform:scale(0.5); opacity:0 } to { transform:scale(1); opacity:1 } }</style>
+</div>
+
+<!-- ══════════ MODAL: Lista de nombres para el Reporte de Alertas ══════════ -->
+<div class="modal-overlay" id="modalListaNombresAlerta" style="z-index:1050" onclick="if(event.target===this)cerrarListaNombresAlerta()">
+  <div class="modal" style="max-width:420px;width:92vw">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.15rem;text-transform:uppercase;letter-spacing:0.04em">👥 Seleccionar Nombre</div>
+      <button onclick="cerrarListaNombresAlerta()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:7px 12px;cursor:pointer;font-size:0.9rem">✕</button>
+    </div>
+    <input type="text" autocapitalize="off" id="alertaBuscarNombreInput" placeholder="🔍 Buscar nombre..." oninput="_filtrarListaNombresAlerta(this.value)"
+      style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);padding:10px 14px;font-family:'Barlow',sans-serif;font-size:0.95rem;margin-bottom:0.8rem">
+    <div id="alertaListaNombresGrid" style="max-height:42vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px"></div>
+    <div id="alertaListaNombresVacio" style="display:none;text-align:center;color:var(--muted);font-size:0.88rem;padding:1.2rem 0">Ningún nombre coincide con la búsqueda.</div>
+    <div style="display:flex;gap:8px;margin-top:1rem;padding-top:0.9rem;border-top:1px solid var(--border)">
+      <input type="text" autocapitalize="off" id="alertaNuevoNombreInput" placeholder="Agregar nuevo nombre..."
+        style="flex:1;min-width:0;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);padding:9px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem"
+        onkeydown="if(event.key==='Enter') agregarNombreAlertaNuevo()">
+      <button type="button" onclick="agregarNombreAlertaNuevo()"
+        style="flex-shrink:0;padding:9px 16px;background:var(--success);border:none;border-radius:8px;color:#fff;font-weight:700;cursor:pointer;font-size:0.9rem">➕ Agregar</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -31858,6 +31289,8 @@ function abrirModalAlerta(editar) {
   const m = _areaMeta(areaAlerta);
   document.getElementById('alertaAreaTxt').textContent = m.icono + ' ' + m.nombre;
   document.getElementById('alertaFechaTxt').textContent = editar ? (editar.fecha || '—') : new Date().toLocaleString('es-GT');
+  document.getElementById('alertaTurno').value = editar ? (editar.turno || '') : '';
+  renderTurnoBtn('alertaTurno');
   document.getElementById('modalAlertaTitulo').textContent = editar ? 'Editar Alerta' : 'Reportar Alerta';
   _alertaFotos.forEach(f => URL.revokeObjectURL(f.url));
   _alertaFotos = [];
@@ -31886,6 +31319,109 @@ function cerrarModalAlerta() {
     _alertaEditando = null;
     _renderAlertaFotos();
   }, 250);
+}
+
+// Lista de nombres sugeridos para el campo "Nombre" del Reporte de Alertas
+const _ALERTA_NOMBRES_SUGERIDOS = [
+  'Edgar Leonel Gómez Saravia',
+  'Margareth Glorisel Salachini Rodriguez',
+  'Katerin Geraldyn Guitierrez De La Cruz',
+  'Luis Ángel Ortiz Donis',
+  'Josué David Méndez Aguilar',
+  'Bryan Alexander Reyes Monroy',
+  'Nelson Alberto Jacobo Marroquin',
+  'Eder Rene Davila Herrera',
+  'Alison Marleny Parada Ramos',
+  'Leidy Esmeralda Marroquín Samayoa',
+  'Eduardo de Jesus Rodriguez Morataya',
+  'Nelson David Chay Olivares'
+];
+const _ALERTA_NOMBRES_STORAGE_KEY = 'conteoPT_alertaNombresLista';
+
+function _cargarNombresAlerta() {
+  try {
+    const guardado = localStorage.getItem(_ALERTA_NOMBRES_STORAGE_KEY);
+    if (guardado) { const arr = JSON.parse(guardado); if (Array.isArray(arr) && arr.length) return arr; }
+  } catch (e) {}
+  return [..._ALERTA_NOMBRES_SUGERIDOS];
+}
+let _alertaNombresLista = _cargarNombresAlerta();
+function _guardarListaNombresAlerta() {
+  try { localStorage.setItem(_ALERTA_NOMBRES_STORAGE_KEY, JSON.stringify(_alertaNombresLista)); } catch (e) {}
+}
+
+function abrirListaNombresAlerta() {
+  document.getElementById('alertaBuscarNombreInput').value = '';
+  document.getElementById('alertaNuevoNombreInput').value = '';
+  _renderListaNombresAlerta(_alertaNombresLista);
+  document.getElementById('modalListaNombresAlerta').classList.add('open');
+  setTimeout(() => document.getElementById('alertaBuscarNombreInput').focus(), 150);
+}
+
+function cerrarListaNombresAlerta() {
+  document.getElementById('modalListaNombresAlerta').classList.remove('open');
+}
+
+function _renderListaNombresAlerta(nombres) {
+  const grid = document.getElementById('alertaListaNombresGrid');
+  const vacio = document.getElementById('alertaListaNombresVacio');
+  grid.innerHTML = nombres.map(n => `
+    <div style="display:flex;align-items:stretch;gap:8px">
+      <button type="button" onclick="seleccionarNombreAlerta('${n.replace(/'/g, "\\'")}')"
+        style="flex:1;min-width:0;min-height:50px;text-align:left;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);padding:12px 14px;font-family:'Barlow',sans-serif;font-size:0.94rem;cursor:pointer;transition:background 0.1s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;-webkit-tap-highlight-color:transparent;touch-action:manipulation"
+        onmousedown="this.style.background='rgba(245,158,11,0.18)'" onmouseup="this.style.background='var(--surface2)'"
+        ontouchstart="this.style.background='rgba(245,158,11,0.18)'" ontouchend="this.style.background='var(--surface2)'">${_escapeHtml(n)}</button>
+      <button type="button" onclick="event.stopPropagation();eliminarNombreAlerta('${n.replace(/'/g, "\\'")}')" title="Eliminar de la lista"
+        style="flex-shrink:0;width:50px;min-height:50px;background:rgba(239,68,68,0.12);border:1.5px solid var(--danger);border-radius:10px;color:var(--danger);cursor:pointer;font-size:1.05rem;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation">🗑</button>
+    </div>
+  `).join('');
+  vacio.style.display = nombres.length ? 'none' : 'block';
+}
+
+function _filtrarListaNombresAlerta(valor) {
+  const q = _normalizarNombreAlerta(valor || '');
+  const filtrados = _alertaNombresLista.filter(n => _normalizarNombreAlerta(n).includes(q));
+  _renderListaNombresAlerta(filtrados);
+}
+
+function seleccionarNombreAlerta(nombre) {
+  document.getElementById('alertaNombre').value = nombre;
+  cerrarListaNombresAlerta();
+}
+
+function agregarNombreAlertaNuevo() {
+  const input = document.getElementById('alertaNuevoNombreInput');
+  const nombre = _formatoNombrePropio(input.value.trim());
+  if (!nombre) { showToast('⚠️', 'Escribe un nombre para agregar'); return; }
+  const yaExiste = _alertaNombresLista.some(n => _normalizarNombreAlerta(n) === _normalizarNombreAlerta(nombre));
+  if (yaExiste) { showToast('⚠️', 'Ese nombre ya está en la lista'); return; }
+  pedirPinAccion({
+    titulo: '➕ Agregar Nombre',
+    mensaje: `Ingresa el código para agregar "${nombre}" a la lista.`,
+    icono: '➕', danger: false, btnTexto: '➕ Agregar', btnClase: 'btn-primary',
+    pin: '123456', zIndex: 1200
+  }, () => {
+    _alertaNombresLista.push(nombre);
+    _alertaNombresLista.sort((a, b) => a.localeCompare(b, 'es'));
+    _guardarListaNombresAlerta();
+    input.value = '';
+    _filtrarListaNombresAlerta(document.getElementById('alertaBuscarNombreInput').value);
+    showToast('✅', 'Nombre agregado a la lista');
+  });
+}
+
+function eliminarNombreAlerta(nombre) {
+  pedirPinAccion({
+    titulo: '🗑 Eliminar Nombre',
+    mensaje: `Ingresa el código para eliminar "${nombre}" de la lista.`,
+    icono: '🗑', danger: true, btnTexto: '🗑 Eliminar', btnClase: 'btn-danger',
+    pin: '123456', zIndex: 1200
+  }, () => {
+    _alertaNombresLista = _alertaNombresLista.filter(n => n !== nombre);
+    _guardarListaNombresAlerta();
+    _filtrarListaNombresAlerta(document.getElementById('alertaBuscarNombreInput').value);
+    showToast('🗑', 'Nombre eliminado de la lista');
+  });
 }
 
 function agregarFotosAlerta(event) {
@@ -31921,15 +31457,15 @@ function _renderAlertaFotos() {
   const grid = document.getElementById('alertaFotosGrid');
   const existentesHtml = _alertaFotosExistentes.map((url, i) => `
     <div style="position:relative;width:64px;height:64px">
-      <img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--border)">
-      <button type="button" onclick="quitarFotoAlerta(${i})" title="Quitar"
+      <img src="${url}" onclick="verImagenGrande('${url}')" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer">
+      <button type="button" onclick="event.stopPropagation();quitarFotoAlerta(${i})" title="Quitar"
         style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--danger);border:2px solid var(--surface);color:#fff;font-size:0.7rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
     </div>`).join('');
   const nuevasHtml = _alertaFotos.map((f, i) => `
     <div style="position:relative;width:64px;height:64px">
-      <img src="${f.url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--border)">
+      <img src="${f.url}" onclick="verImagenGrande('${f.url}')" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer">
       <span style="position:absolute;bottom:2px;left:2px;background:rgba(16,185,129,0.85);color:#fff;font-size:0.55rem;font-weight:700;padding:1px 4px;border-radius:4px">NUEVA</span>
-      <button type="button" onclick="quitarFotoAlerta(${_alertaFotosExistentes.length + i})" title="Quitar"
+      <button type="button" onclick="event.stopPropagation();quitarFotoAlerta(${_alertaFotosExistentes.length + i})" title="Quitar"
         style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--danger);border:2px solid var(--surface);color:#fff;font-size:0.7rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
     </div>`).join('');
   grid.innerHTML = existentesHtml + nuevasHtml;
@@ -31941,9 +31477,19 @@ function _renderAlertaFotos() {
 }
 
 async function guardarAlerta() {
-  const nombre = document.getElementById('alertaNombre').value.trim();
+  const nombre = _formatoNombrePropio(document.getElementById('alertaNombre').value.trim());
   if (!nombre) { showToast('⚠️', 'Ingresa el nombre de quien reporta'); document.getElementById('alertaNombre').focus(); return; }
   const comentario = document.getElementById('alertaComentario').value.trim();
+  const turno = document.getElementById('alertaTurno').value || '';
+  if (!turno) {
+    showToast('⚠️', 'Falta seleccionar el Turno');
+    const btnTurno = document.getElementById('btn_alertaTurno');
+    btnTurno.style.borderColor = 'var(--danger)';
+    btnTurno.style.boxShadow = '0 0 0 2px rgba(239,68,68,0.35)';
+    btnTurno.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => { btnTurno.style.borderColor = ''; btnTurno.style.boxShadow = ''; }, 2000);
+    return;
+  }
   const btn = document.getElementById('btnGuardarAlerta');
   const btnTxt = document.getElementById('btnGuardarAlertaTxt');
   const spinner = document.getElementById('btnGuardarAlertaSpinner');
@@ -31955,7 +31501,7 @@ async function guardarAlerta() {
   spinner.style.display = 'inline-block';
   btnTxt.textContent = editando ? 'Guardando cambios...' : 'Guardando...';
   if (btnCancelar) { btnCancelar.disabled = true; btnCancelar.style.opacity = '0.4'; btnCancelar.style.cursor = 'not-allowed'; }
-  document.getElementById('alertaGuardando').style.display = 'block';
+  document.getElementById('alertaGuardando').style.display = 'flex';
   document.getElementById('alertaGuardandoMsg').textContent = editando ? 'Guardando cambios...' : 'Guardando alerta...';
   try {
     const area = editando ? editando.area : (window._areaActiva || 'tuberia');
@@ -31970,7 +31516,7 @@ async function guardarAlerta() {
     } else {
       const now = Date.now();
       docRef = await window.colArea('alertas').add({
-        nombre, comentario, area,
+        nombre, comentario, area, turno,
         fecha: new Date(now).toLocaleString('es-GT'),
         timestamp: now,
         fotos: []
@@ -31988,16 +31534,16 @@ async function guardarAlerta() {
     }
     const fotosFinal = [..._alertaFotosExistentes, ...urlsNuevas];
     if (editando) {
-      await docRef.update({ nombre, comentario, fotos: fotosFinal });
+      await docRef.update({ nombre, comentario, turno, fotos: fotosFinal });
     } else if (urlsNuevas.length) {
       await docRef.update({ fotos: fotosFinal });
     }
-    showToast(editando ? '💾' : '🚨', editando ? 'Alerta actualizada' : 'Alerta guardada correctamente');
     document.getElementById('alertaExitoTxt').textContent = editando ? '¡Cambios guardados!' : '¡Alerta guardada!';
     const overlayExito = document.getElementById('alertaExitoOverlay');
     overlayExito.style.display = 'flex';
     await new Promise(r => setTimeout(r, 900));
     overlayExito.style.display = 'none';
+    showToast(editando ? '💾' : '🚨', editando ? 'Alerta actualizada' : 'Alerta guardada correctamente');
     cerrarModalAlerta();
   } catch (e) {
     showToast('⚠️', 'Error al guardar la alerta: ' + (e.message || e));
@@ -32012,13 +31558,17 @@ async function guardarAlerta() {
   }
 }
 
+function _formatoNombrePropio(s) {
+  return String(s == null ? '' : s).toLowerCase().replace(/(^|\s)([a-záéíóúñü])/g, (m, sep, letra) => sep + letra.toUpperCase());
+}
+
 function _escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 </script>
 
 <!-- ══════════ MODAL genérico: ver imagen ampliada (tap para ampliar) ══════════ -->
-<div class="modal-overlay" id="modalImagenGrande" onclick="if(event.target===this)cerrarImagenGrande()" style="z-index:600;background:rgba(0,0,0,0.88)">
+<div class="modal-overlay" id="modalImagenGrande" onclick="if(event.target===this)cerrarImagenGrande()" style="z-index:1100;background:rgba(0,0,0,0.88)">
   <div style="max-width:94vw;max-height:94vh;position:relative;display:flex;align-items:center;justify-content:center;margin:auto">
     <img id="imagenGrandeImg" src="" style="max-width:94vw;max-height:94vh;border-radius:10px;object-fit:contain;box-shadow:0 24px 80px rgba(0,0,0,0.6)">
     <button onclick="cerrarImagenGrande()" title="Cerrar"
