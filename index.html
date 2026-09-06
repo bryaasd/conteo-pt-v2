@@ -2278,7 +2278,7 @@
       <div style="font-family:'Barlow',sans-serif;font-weight:600;font-size:2.2rem;letter-spacing:0.01em;line-height:1.1">Conteo <span style="color:var(--accent)">PT</span></div>
       <div style="font-size:1.05rem;font-weight:400;color:var(--text);margin-top:0.5rem;font-family:'Barlow',sans-serif">Selecciona tu perfil para continuar</div>
       <div id="loginFechaHoy" style="font-size:0.88rem;color:var(--muted);margin-top:0.6rem;font-weight:400;letter-spacing:0.02em;font-family:'Barlow',sans-serif"></div>
-      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;letter-spacing:0.02em;font-family:'Barlow',sans-serif">Versión del sistema <span style="color:var(--accent);font-weight:500">v4.79.0</span></div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;letter-spacing:0.02em;font-family:'Barlow',sans-serif">Versión del sistema <span style="color:var(--accent);font-weight:500">v4.79.1</span></div>
       <div style="margin-top:0.85rem;display:inline-block;padding:6px 18px;border-radius:30px;background:linear-gradient(90deg,rgba(245,158,11,0.16),rgba(249,115,22,0.16));border:1px solid rgba(245,158,11,0.35)">
         <span style="font-family:'Barlow',sans-serif;font-weight:500;font-size:0.95rem;letter-spacing:0.04em;color:var(--accent)">💛 mari29.05.1961</span>
       </div>
@@ -31355,7 +31355,6 @@ function abrirListaNombresAlerta() {
   document.getElementById('alertaNuevoNombreInput').value = '';
   _renderListaNombresAlerta(_alertaNombresLista);
   document.getElementById('modalListaNombresAlerta').classList.add('open');
-  setTimeout(() => document.getElementById('alertaBuscarNombreInput').focus(), 150);
 }
 
 function cerrarListaNombresAlerta() {
