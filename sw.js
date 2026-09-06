@@ -1,12 +1,3 @@
-// ── Conteo PT — Service Worker v4.79.1 ─────────────────────────────────────
-// Cambios v4.79.1 (Alertas 🚨 — ajuste):
-//   · CORREGIDO — Modal "Elegir de la lista" (campo Nombre en Reportar
-//     Alerta): ya no activa el teclado automáticamente al abrirse, ya que
-//     es solo para seleccionar un nombre tocándolo, no para escribir. El
-//     buscador sigue disponible si se toca manualmente. No afecta al campo
-//     de comentario/descripción, que sigue con teclado normal.
-//
-
 // ── Conteo PT — Service Worker v4.79.0 ─────────────────────────────────────
 // Cambios v4.79.0 (Alertas 🚨 — mejoras):
 //   · NUEVO — Tarjeta "🚨 Reporte de Alertas" en la pantalla de selección de
@@ -15,20 +6,31 @@
 //     lógica interna quedan intactos, solo dejó de ser accesible desde ahí).
 //   · NUEVO — Campo "Turno" (obligatorio) en el modal de Reportar Alerta,
 //     con botón cíclico Turno 1 (azul) / Turno 2 (morado), igual estilo que
-//     el resto de la app.
+//     el resto de la app. Se muestra también en cada tarjeta de los
+//     reportes (antes solo se veía el área).
 //   · NUEVO — Campo "Nombre" ahora se llena solo desde una lista
-//     seleccionable (ya no se puede escribir libremente): botón para elegir
-//     un nombre, con buscador, y opciones para agregar o eliminar nombres de
-//     la lista (persistente en el dispositivo), ambas protegidas con código
-//     de confirmación.
+//     seleccionable (ya no se puede escribir libremente, evitando nombres
+//     mal escritos): botón para elegir un nombre, con buscador, y opciones
+//     para agregar o eliminar nombres de la lista (persistente en el
+//     dispositivo), ambas protegidas con código de confirmación. Los
+//     renglones de la lista se agrandaron para que sean más fáciles de
+//     tocar en el celular, y el buscador ya no activa el teclado solo al
+//     abrir la lista (solo si se toca a propósito).
 //   · NUEVO — Análisis General con gráficas en el Reporte Interactivo y en
 //     el PDF de Alertas: incidencias por área, por turno, top de personas
-//     que reportan (agrupando variantes del mismo nombre) y tendencia en el
-//     tiempo.
+//     que reportan (agrupando variantes del mismo nombre, ej. "bryan reyes"
+//     y "Bryan Alexander Reyes Monroy" cuentan como la misma persona) y
+//     tendencia en el tiempo.
 //   · NUEVO — Tocar cualquier foto (ya subida o recién agregada) dentro del
 //     modal de Reportar Alerta la abre ampliada.
 //   · MEJORADO — El nombre de quien reporta se guarda con formato de nombre
 //     propio (primera letra de cada palabra en mayúscula).
+//   · CORREGIDO — Fotos de la cámara en Reportar Alerta: se comprimen de
+//     forma eficiente en memoria antes de guardarlas (antes se subían sin
+//     comprimir), evitando el error de "memoria insuficiente" con varias
+//     fotos de alta resolución. También se corrigió que algunas fotos
+//     tomadas en horizontal no cargaran — ahora se respeta la orientación
+//     real de la foto (vertical u horizontal) al procesarla.
 //   · CORREGIDO — Las tarjetas de alerta ya no se cortan entre páginas al
 //     imprimir/generar el PDF; se agregó impresión forzada de colores de
 //     fondo para que las barras de las gráficas sí se vean en el PDF.
@@ -1892,7 +1894,7 @@
 //   · Firebase Storage habilitado: se agrega el SDK firebase-storage-compat
 //     v9.23.0, html2canvas v1.4.1 y jsPDF v2.5.1 como dependencias externas.
 
-const CACHE_NAME = 'conteo-pt-v4.79.1';
+const CACHE_NAME = 'conteo-pt-v4.79.0';
 
 const ASSETS = [
   './',

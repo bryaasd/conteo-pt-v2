@@ -2278,7 +2278,7 @@
       <div style="font-family:'Barlow',sans-serif;font-weight:600;font-size:2.2rem;letter-spacing:0.01em;line-height:1.1">Conteo <span style="color:var(--accent)">PT</span></div>
       <div style="font-size:1.05rem;font-weight:400;color:var(--text);margin-top:0.5rem;font-family:'Barlow',sans-serif">Selecciona tu perfil para continuar</div>
       <div id="loginFechaHoy" style="font-size:0.88rem;color:var(--muted);margin-top:0.6rem;font-weight:400;letter-spacing:0.02em;font-family:'Barlow',sans-serif"></div>
-      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;letter-spacing:0.02em;font-family:'Barlow',sans-serif">Versión del sistema <span style="color:var(--accent);font-weight:500">v4.79.1</span></div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;letter-spacing:0.02em;font-family:'Barlow',sans-serif">Versión del sistema <span style="color:var(--accent);font-weight:500">v4.79.0</span></div>
       <div style="margin-top:0.85rem;display:inline-block;padding:6px 18px;border-radius:30px;background:linear-gradient(90deg,rgba(245,158,11,0.16),rgba(249,115,22,0.16));border:1px solid rgba(245,158,11,0.35)">
         <span style="font-family:'Barlow',sans-serif;font-weight:500;font-size:0.95rem;letter-spacing:0.04em;color:var(--accent)">💛 mari29.05.1961</span>
       </div>
@@ -31423,7 +31423,55 @@ function eliminarNombreAlerta(nombre) {
   });
 }
 
-function agregarFotosAlerta(event) {
+// Comprime una foto para el Reporte de Alertas de forma eficiente en memoria:
+// usa createImageBitmap (decodifica y reduce sin generar un string base64
+// intermedio gigante) y respeta la orientación real de la foto (evita que
+// fotos tomadas en horizontal salgan rotadas o fallen por falta de memoria
+// en equipos con menos RAM). Si el navegador no soporta createImageBitmap,
+// cae de vuelta al método anterior (FileReader + <img> + canvas).
+function _comprimirFotoAlerta(file) {
+  const MAX = 1080;
+  const CALIDAD = 0.75;
+  const _dibujarYExportar = (fuente, w0, h0) => new Promise((resolve, reject) => {
+    let w = w0, h = h0;
+    if (w > MAX || h > MAX) {
+      if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+      else       { w = Math.round(w * MAX / h); h = MAX; }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(fuente, 0, 0, w, h);
+    if (fuente.close) fuente.close(); // libera el bitmap decodificado cuanto antes
+    canvas.toBlob(blob => {
+      canvas.width = 0; canvas.height = 0;
+      if (blob) resolve(blob); else reject(new Error('No se pudo generar la imagen comprimida'));
+    }, 'image/jpeg', CALIDAD);
+  });
+
+  if (typeof createImageBitmap === 'function') {
+    return createImageBitmap(file, { imageOrientation: 'from-image' })
+      .then(bitmap => _dibujarYExportar(bitmap, bitmap.width, bitmap.height))
+      .catch(() => _comprimirFotoAlertaFallback(file, _dibujarYExportar));
+  }
+  return _comprimirFotoAlertaFallback(file, _dibujarYExportar);
+}
+
+// Método alterno para navegadores sin soporte de createImageBitmap
+function _comprimirFotoAlertaFallback(file, _dibujarYExportar) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => _dibujarYExportar(img, img.width, img.height).then(resolve).catch(reject);
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function agregarFotosAlerta(event) {
   const files = Array.from(event.target?.files || []);
   event.target.value = '';
   if (!files.length) return;
@@ -31432,8 +31480,17 @@ function agregarFotosAlerta(event) {
   if (espacio <= 0) { showToast('⚠️', 'Máximo ' + _ALERTA_MAX_FOTOS + ' fotos por alerta'); return; }
   const aAgregar = files.slice(0, espacio);
   if (files.length > espacio) showToast('⚠️', 'Solo se agregaron ' + espacio + ' foto(s) — máximo ' + _ALERTA_MAX_FOTOS);
-  aAgregar.forEach(file => _alertaFotos.push({ file, url: URL.createObjectURL(file) }));
-  _renderAlertaFotos();
+  // Se procesan una por una (no en paralelo) para no saturar la memoria del
+  // dispositivo al decodificar varias fotos de alta resolución a la vez.
+  for (const file of aAgregar) {
+    try {
+      const blob = await _comprimirFotoAlerta(file);
+      _alertaFotos.push({ blob, url: URL.createObjectURL(blob) });
+      _renderAlertaFotos();
+    } catch (e) {
+      showToast('⚠️', 'No se pudo procesar una de las fotos');
+    }
+  }
 }
 
 // idx recorre primero las fotos existentes (ya guardadas) y luego las nuevas
@@ -31525,10 +31582,9 @@ async function guardarAlerta() {
     for (let i = 0; i < _alertaFotos.length; i++) {
       btnTxt.textContent = `Subiendo foto ${i + 1}/${_alertaFotos.length}...`;
       document.getElementById('alertaGuardandoMsg').textContent = `Subiendo foto ${i + 1}/${_alertaFotos.length}...`;
-      const file = _alertaFotos[i].file;
-      const ext = (file.name && file.name.split('.').pop()) || 'jpg';
-      const path = 'alertas_pt/' + plantaPrefix + area + '/' + docRef.id + '/foto' + Date.now() + '_' + i + '.' + ext;
-      const snap = await window.fbStorage.ref(path).put(file);
+      const blob = _alertaFotos[i].blob;
+      const path = 'alertas_pt/' + plantaPrefix + area + '/' + docRef.id + '/foto' + Date.now() + '_' + i + '.jpg';
+      const snap = await window.fbStorage.ref(path).put(blob);
       urlsNuevas.push(await snap.ref.getDownloadURL());
     }
     const fotosFinal = [..._alertaFotosExistentes, ...urlsNuevas];
