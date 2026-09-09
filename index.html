@@ -2143,7 +2143,7 @@
     var SEQ_MS = 2350;
     var BUFFER_MS = 550;
     if (ov) {
-      var meta = { costanera: { ico: "🏗️", nombre: "Costanera", color: "#f97316" }, lamina: { ico: "🧱", nombre: "Lámina", color: "#22c55e" }, tiras_bobinas: { ico: "🧲", nombre: "Tiras de Bobinas", color: "#a855f7" }, bodega_segunda: { ico: "🥈", nombre: "Bodega de Segunda", color: "#eab308" }, auditoria: { ico: "🔍", nombre: "Auditoría", color: "#ec4899" } };
+      var meta = { costanera: { ico: "🏗️", nombre: "Costanera", color: "#f59e0b" }, lamina: { ico: "🧱", nombre: "Lámina", color: "#22c55e" }, tiras_bobinas: { ico: "🧲", nombre: "Tiras de Bobinas", color: "#a855f7" }, bodega_segunda: { ico: "🥈", nombre: "Bodega de Segunda", color: "#eab308" }, auditoria: { ico: "🔍", nombre: "Auditoría", color: "#ec4899" } };
       var metaPlanta = { bsm: { ico: "🏭", nombre: "Planta BSM", color: "#f59e0b" }, central_alamos: { ico: "🏢", nombre: "Central Álamos", color: "#38bdf8" } };
       var m = areaRecarga ? (meta[areaRecarga] || { ico: "🔧", nombre: "Tubería", color: "#3b82f6" })
             : plantaRecarga ? (metaPlanta[plantaRecarga] || metaPlanta.bsm)
@@ -2278,8 +2278,8 @@
       <div style="font-family:'Barlow',sans-serif;font-weight:600;font-size:2.2rem;letter-spacing:0.01em;line-height:1.1">Conteo <span style="color:var(--accent)">PT</span></div>
       <div style="font-size:1.05rem;font-weight:400;color:var(--text);margin-top:0.5rem;font-family:'Barlow',sans-serif">Selecciona tu perfil para continuar</div>
       <div id="loginFechaHoy" style="font-size:0.88rem;color:var(--muted);margin-top:0.6rem;font-weight:400;letter-spacing:0.02em;font-family:'Barlow',sans-serif"></div>
-      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;letter-spacing:0.02em;font-family:'Barlow',sans-serif">Versión del sistema <span style="color:var(--accent);font-weight:500">v4.79.1</span></div>
-      <div style="margin-top:0.85rem;display:inline-block;padding:6px 18px;border-radius:30px;background:linear-gradient(90deg,rgba(245,158,11,0.16),rgba(249,115,22,0.16));border:1px solid rgba(245,158,11,0.35)">
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;letter-spacing:0.02em;font-family:'Barlow',sans-serif">Versión del sistema <span style="color:var(--accent);font-weight:500">v4.80.0</span></div>
+      <div style="margin-top:0.85rem;display:inline-block;padding:6px 18px;border-radius:30px;background:linear-gradient(90deg,rgba(245,158,11,0.16),rgba(245,158,11,0.16));border:1px solid rgba(245,158,11,0.35)">
         <span style="font-family:'Barlow',sans-serif;font-weight:500;font-size:0.95rem;letter-spacing:0.04em;color:var(--accent)">💛 mari29.05.1961</span>
       </div>
     </div>
@@ -2360,15 +2360,20 @@
         <div style="font-family:'Barlow',sans-serif;font-weight:500;font-size:0.92rem;letter-spacing:0.01em;line-height:1.3;color:var(--text)">Verificador<br>Inventario</div>
       </div>
       <div id="cardSalida" onclick="seleccionarPerfil('salida')"
-        style="border:2px solid var(--border);border-radius:12px;padding:1.1rem 0.3rem;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--surface2);user-select:none;-webkit-tap-highlight-color:transparent">
+        style="display:none;border:2px solid var(--border);border-radius:12px;padding:1.1rem 0.3rem;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--surface2);user-select:none;-webkit-tap-highlight-color:transparent">
         <div style="font-size:2rem;line-height:1;margin-bottom:0.5rem" aria-hidden="true">📦</div>
         <div style="font-family:'Barlow',sans-serif;font-weight:500;font-size:0.92rem;letter-spacing:0.01em;line-height:1.3;color:var(--text)">Verificador<br>Operaciones</div>
+      </div>
+      <div id="cardHorasExtra" onclick="abrirHorasExtra(); _pulsarTarjeta('cardHorasExtra')"
+        style="border:2px solid var(--border);border-radius:12px;padding:1.1rem 0.3rem;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--surface2);user-select:none;-webkit-tap-highlight-color:transparent">
+        <div style="font-size:2rem;line-height:1;margin-bottom:0.5rem" aria-hidden="true">⏰</div>
+        <div style="font-family:'Barlow',sans-serif;font-weight:500;font-size:0.92rem;letter-spacing:0.01em;line-height:1.3;color:var(--text)">Horas<br>Extra</div>
       </div>
       <div id="cardTransporte" onclick="seleccionarPerfil('transporte')" style="display:none;border:2px solid var(--border);border-radius:12px;padding:1.1rem 0.3rem;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--surface2);user-select:none;-webkit-tap-highlight-color:transparent">
         <div style="font-size:2rem;line-height:1;margin-bottom:0.5rem" aria-hidden="true">🚛</div>
         <div style="font-family:'Barlow',sans-serif;font-weight:500;font-size:0.92rem;letter-spacing:0.01em;line-height:1.3;color:var(--text)">Transporte</div>
       </div>
-      <div id="cardReporteAlerta" onclick="abrirModalAlerta()"
+      <div id="cardReporteAlerta" onclick="abrirModalAlerta(); _pulsarTarjeta('cardReporteAlerta')"
         style="border:2px solid var(--border);border-radius:12px;padding:1.1rem 0.3rem;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--surface2);user-select:none;-webkit-tap-highlight-color:transparent">
         <div style="font-size:2rem;line-height:1;margin-bottom:0.5rem" aria-hidden="true">🚨</div>
         <div style="font-family:'Barlow',sans-serif;font-weight:500;font-size:0.92rem;letter-spacing:0.01em;line-height:1.3;color:var(--text)">Reporte de<br>Alertas</div>
@@ -5560,7 +5565,7 @@ const _movOdooEstados = [
 ];
 
 const colorMap = {
-  ROJO:"#ef4444", NARANJADO:"#f97316", AMARILLO:"#eab308", VERDE:"#22c55e",
+  ROJO:"#ef4444", NARANJADO:"#f59e0b", AMARILLO:"#eab308", VERDE:"#22c55e",
   AZUL:"#3b82f6", MORADO:"#a855f7",    ROSADO:"#ec4899",   BLANCO:"#e2e8f0",
   NEGRO:"#334155", DORADO:"#d97706",   MARRON:"#92400e",   "Sin Color":"#475569",
   NATURAL:"#94a3b8"
@@ -6845,7 +6850,7 @@ const TIPOS_TUBO = [
   { valor: 'CUADRADO',    color: '#ef4444', icono: 'square' },
   { valor: 'RECTANGULAR', color: '#eab308', icono: 'rect'   },
   { valor: 'REDONDO',     color: '#3b82f6', icono: 'circle' },
-  { valor: 'COSTANERA',   color: '#f97316', icono: 'rect'   }
+  { valor: 'COSTANERA',   color: '#f59e0b', icono: 'rect'   }
 ];
 // Tubo Mecánico (Proceso) — no estaba en TIPOS_TUBO, se usa aparte para Bodega de Segunda
 const TIPO_MECANICO_VISUAL = { valor: 'MECANICO', color: '#581c87', icono: 'square' };
@@ -9784,6 +9789,23 @@ function showToast(icon, msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+// Mensaje centrado en medio de la pantalla (para avisos que el usuario no debe
+// pasar por alto, a diferencia del toast normal que aparece en una esquina).
+let toastCentroTimer;
+function showToastCentro(icon, msg, duracionMs) {
+  const t = document.getElementById('toast');
+  t.classList.add('toast-center');
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toastMsg').textContent  = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  clearTimeout(toastCentroTimer);
+  toastCentroTimer = setTimeout(() => {
+    t.classList.remove('show');
+    t.classList.remove('toast-center');
+  }, duracionMs || 2600);
+}
+
 // El modal de actualización obligatoria queda excluido a propósito: no debe
 // poder cerrarse haciendo clic afuera, solo con el botón "Actualizar ahora".
 document.querySelectorAll('.modal-overlay:not(#modalActualizacionObligatoria)').forEach(el =>
@@ -9906,7 +9928,7 @@ function renderDashboard() {
     </div>
   `;
 
-  const COLORS = ['#f59e0b','#3b82f6','#10b981','#ef4444','#a855f7','#f97316','#06b6d4','#84cc16'];
+  const COLORS = ['#f59e0b','#3b82f6','#10b981','#ef4444','#a855f7','#f59e0b','#06b6d4','#84cc16'];
   const chartDefaults = {
     plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'Barlow', size: 11 }, boxWidth: 14 } } },
     scales: {
@@ -11490,7 +11512,7 @@ function renderResumen() {
           // Burbuja naranja: cuenta movimientos en estado Pendiente(1) / Mala digitación(3) / ???(4)
           const nAlertasMov = movs ? movs.filter(m => [1,3,4].includes(m.estado || 0)).length : 0;
           const badgeHTML = nAlertasMov > 0
-            ? '<span style="position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#f97316;color:#1a0f00;font-family:\'Barlow Condensed\',sans-serif;font-weight:800;font-size:0.72rem;line-height:18px;text-align:center;box-shadow:0 0 0 2px var(--surface)">' + nAlertasMov + '</span>'
+            ? '<span style="position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#f59e0b;color:#1a0f00;font-family:\'Barlow Condensed\',sans-serif;font-weight:800;font-size:0.72rem;line-height:18px;text-align:center;box-shadow:0 0 0 2px var(--surface)">' + nAlertasMov + '</span>'
             : '';
           return '<td style="text-align:center"><span style="position:relative;display:inline-block"><button class="btn-alien ' + alienCls + '" title="Movimientos Odoo" onclick="event.stopPropagation();abrirMovimientosOdoo(' + JSON.stringify(g).replace(/"/g,'&quot;').replace(/'/g,"&#39;") + ')">👽</button>' + badgeHTML + '</span></td>';
         })() : '<td></td>')
@@ -13548,7 +13570,7 @@ function construirHtmlReporteInteractivo() {
             }
             var nAlertasMov = movs ? movs.filter(function(m){ return [1,3,4].indexOf(m.estado || 0) !== -1; }).length : 0;
             var badgeHTML = nAlertasMov > 0
-              ? '<span style="position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#f97316;color:#1a0f00;font-family:\\'Barlow Condensed\\',sans-serif;font-weight:800;font-size:0.72rem;line-height:18px;text-align:center;box-shadow:0 0 0 2px var(--surface)">' + nAlertasMov + '</span>'
+              ? '<span style="position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#f59e0b;color:#1a0f00;font-family:\\'Barlow Condensed\\',sans-serif;font-weight:800;font-size:0.72rem;line-height:18px;text-align:center;box-shadow:0 0 0 2px var(--surface)">' + nAlertasMov + '</span>'
               : '';
             return '<td style="text-align:center"><span style="position:relative;display:inline-block"><button class="btn-alien-r ' + alienCls + '" title="Movimientos Odoo" onclick="event.stopPropagation();abrirMovsReporte(' + idx + ')">👽</button>' + badgeHTML + '</span></td>';
           })()) +
@@ -16386,7 +16408,7 @@ function renderMOs() {
     const badge      = esPend
       ? `<span class="estado-badge" style="background:rgba(245,158,11,0.15);color:var(--accent)">⏳ PENDIENTE</span>`
       : esParcial
-        ? `<span class="estado-badge" style="background:rgba(249,115,22,0.15);color:#f97316">⚡ PARCIAL</span>`
+        ? `<span class="estado-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b">⚡ PARCIAL</span>`
         : `<span class="estado-badge" style="background:rgba(16,185,129,0.15);color:var(--success)">✅ INGRESADO</span>`;
     const gid = 'mogrp-' + g.gkey.replace(/[^a-zA-Z0-9]/g, '-');
     // Auto-expandir si hay búsqueda activa
@@ -16482,9 +16504,9 @@ function renderMOs() {
             ${badgeDias(g.timestamp, g.estado)}
             <div style="display:flex;gap:5px">
               <span style="padding:5px 12px;font-size:0.78rem;font-weight:700;border-radius:8px;display:inline-block;
-                background:${esPend?'rgba(245,158,11,0.2)':esParcial?'rgba(249,115,22,0.2)':'rgba(16,185,129,0.2)'};
-                color:${esPend?'var(--accent)':esParcial?'#f97316':'var(--success)'};
-                border:1px solid ${esPend?'rgba(245,158,11,0.4)':esParcial?'rgba(249,115,22,0.4)':'rgba(16,185,129,0.4)'}">
+                background:${esPend?'rgba(245,158,11,0.2)':esParcial?'rgba(245,158,11,0.2)':'rgba(16,185,129,0.2)'};
+                color:${esPend?'var(--accent)':esParcial?'#f59e0b':'var(--success)'};
+                border:1px solid ${esPend?'rgba(245,158,11,0.4)':esParcial?'rgba(245,158,11,0.4)':'rgba(16,185,129,0.4)'}">
                 ${esPend?'⏳ Pendiente':esParcial?'⚡ Parcial':'✅ Ingresado'}
               </span>
               <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();abrirComentario('mos','${g.gkey}')" title="${g.comentario?'Ver/editar comentario':'Agregar comentario'}" style="color:${g.comentario?'var(--accent)':'var(--muted)'}">💬</button>
@@ -17480,7 +17502,7 @@ function renderSROs() {
     const badge      = esPend
       ? `<span class="estado-badge" style="background:rgba(245,158,11,0.15);color:var(--accent)">${etq.pend}</span>`
       : esParcial
-        ? `<span class="estado-badge" style="background:rgba(249,115,22,0.15);color:#f97316">⚡ PARCIAL</span>`
+        ? `<span class="estado-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b">⚡ PARCIAL</span>`
         : `<span class="estado-badge" style="background:rgba(16,185,129,0.15);color:var(--success)">${etq.fin}</span>`;
     const gid = 'srogrp-' + g.gkey.replace(/[^a-zA-Z0-9]/g, '-');
     // Auto-expandir si hay búsqueda activa
@@ -17554,9 +17576,9 @@ function renderSROs() {
             ${badgeDias(g.timestamp, g.estado)}
             <div style="display:flex;gap:5px">
               <span style="padding:5px 12px;font-size:0.78rem;font-weight:700;border-radius:8px;display:inline-block;
-                background:${esPend?'rgba(245,158,11,0.2)':esParcial?'rgba(249,115,22,0.2)':'rgba(16,185,129,0.2)'};
-                color:${esPend?'var(--accent)':esParcial?'#f97316':'var(--success)'};
-                border:1px solid ${esPend?'rgba(245,158,11,0.4)':esParcial?'rgba(249,115,22,0.4)':'rgba(16,185,129,0.4)'}">
+                background:${esPend?'rgba(245,158,11,0.2)':esParcial?'rgba(245,158,11,0.2)':'rgba(16,185,129,0.2)'};
+                color:${esPend?'var(--accent)':esParcial?'#f59e0b':'var(--success)'};
+                border:1px solid ${esPend?'rgba(245,158,11,0.4)':esParcial?'rgba(245,158,11,0.4)':'rgba(16,185,129,0.4)'}">
                 ${esPend?'⏳ Pendiente':esParcial?'⚡ Parcial':'✅ Ingresado'}
               </span>
               <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();abrirComentario('sros','${g.gkey}')" title="${g.comentario?'Ver/editar comentario':'Agregar comentario'}" style="color:${g.comentario?'var(--accent)':'var(--muted)'}">💬</button>
@@ -20164,7 +20186,7 @@ function renderDLineas() {
       ? `<span style="font-weight:700">${atEq}</span> <span style="color:var(--muted);font-size:0.7rem">at</span> <span style="color:var(--muted)">+</span> <span style="font-weight:700">${suEq}</span> <span style="color:var(--muted);font-size:0.7rem">su</span>`
       : `<span style="font-weight:700">${atEq}</span> <span style="color:var(--muted);font-size:0.7rem">at</span>`;
     const sel = selectedDLineaIdx === i;
-    const colorCal = l.cal === '1RA CALIDAD' ? 'var(--success)' : '#f97316';
+    const colorCal = l.cal === '1RA CALIDAD' ? 'var(--success)' : '#f59e0b';
     const rowBg   = sel ? 'background:rgba(245,158,11,0.12)' : '';
     const rowBord = `border-left:4px solid ${colorCal}`;
     const padLeft = 'padding-left:11px';
@@ -21462,7 +21484,7 @@ function generarReportePDF() {
   const atadosPDF = registros.reduce((s,r) => s + r.atados, 0);
   const svgCap = svgCapacidad(atadosPDF, CAP_BODEGA_PDF, 760);
 
-  const BCOLS = ['#f59e0b','#3b82f6','#10b981','#ef4444','#a855f7','#f97316'];
+  const BCOLS = ['#f59e0b','#3b82f6','#10b981','#ef4444','#a855f7','#f59e0b'];
   const svgTipo = svgBarras(porTipo, 380, 160, BCOLS);
   const svgMat  = svgBarras(porMat,  240, 160, ['#10b981','#a855f7','#06b6d4']);
   const svgCal  = svgDonut(tot1ra,'1RA',tot2da,'2DA',200);
@@ -21476,7 +21498,7 @@ function generarReportePDF() {
   });
   const itemsPct = Object.values(gruposPct).sort((a, b) => b.total - a.total);
   const totalGlobalPct = itemsPct.reduce((s, i) => s + i.total, 0);
-  const PCOLORS = ['#f59e0b','#3b82f6','#10b981','#ef4444','#a855f7','#f97316','#06b6d4','#84cc16','#ec4899','#14b8a6','#f43f5e','#8b5cf6'];
+  const PCOLORS = ['#f59e0b','#3b82f6','#10b981','#ef4444','#a855f7','#f59e0b','#06b6d4','#84cc16','#ec4899','#14b8a6','#f43f5e','#8b5cf6'];
   const top10 = itemsPct.slice(0, 10);
   const otrosPct = itemsPct.slice(10).reduce((s,i)=>s+i.total,0);
   const barrasPct = otrosPct > 0 ? [...top10, { codigo:`Otros (${itemsPct.length-10} más)`, tipo:'', mat:'', medida:'', espesor:'', total:otrosPct, _otros:true }] : top10;
@@ -22618,7 +22640,7 @@ function renderGraficaPorcentajes() {
   const totalGlobal = items.reduce((s, i) => s + i.total, 0);
   if (!totalGlobal) return;
 
-  const COLORS = ['#f59e0b','#3b82f6','#10b981','#ef4444','#a855f7','#f97316','#06b6d4','#84cc16','#ec4899','#14b8a6','#f43f5e','#8b5cf6'];
+  const COLORS = ['#f59e0b','#3b82f6','#10b981','#ef4444','#a855f7','#f59e0b','#06b6d4','#84cc16','#ec4899','#14b8a6','#f43f5e','#8b5cf6'];
 
   // Crear o actualizar panel
   let panelEl = document.getElementById('dashPorcentajes');
@@ -22731,7 +22753,7 @@ function seleccionarArea(area) {
 }
 
 function _areaMeta(area) {
-  if (area === 'costanera')      return { nombre: 'Costanera', color: '#f97316', rgb: '249,115,22', icono: '🏗️' };
+  if (area === 'costanera')      return { nombre: 'Costanera', color: '#f59e0b', rgb: '245,158,11', icono: '🏗️' };
   if (area === 'lamina')         return { nombre: 'Lámina',    color: '#22c55e', rgb: '34,197,94',  icono: '🧱' };
   if (area === 'tiras_bobinas')  return { nombre: 'Tiras de Bobinas',  color: '#a855f7', rgb: '168,85,247', icono: '🧲' };
   if (area === 'bodega_segunda') return { nombre: 'Bodega de Segunda', color: '#eab308', rgb: '234,179,8',  icono: '🥈' };
@@ -22877,7 +22899,7 @@ function resaltarAreaActiva(areaForzada) {
   // en toda área); su lugar en el grid lo ocupa la tarjeta de Reporte de Alertas, que es
   // siempre visible. El perfil "transporte" y su lógica interna no se tocaron.
   if (cardTransporte) cardTransporte.style.display = 'none';
-  if (cardSalida) cardSalida.style.display = esAreaSinSalida ? 'none' : '';
+  if (cardSalida) cardSalida.style.display = 'none'; // Verificador Operaciones oculto permanentemente
   // En Auditoría, la única tarjeta de perfil visible (Inventario) se renombra a
   // "Registro de Operaciones" — en las demás áreas conserva su texto normal.
   const cardInventarioIcon = document.getElementById('cardInventario')?.querySelector('div:first-child');
@@ -22885,9 +22907,9 @@ function resaltarAreaActiva(areaForzada) {
   const cardInventarioTxt = document.getElementById('cardInventario')?.querySelector('div:last-child');
   if (cardInventarioTxt) cardInventarioTxt.innerHTML = (area === 'auditoria') ? 'Registro de<br>Operaciones' : 'Verificador<br>Inventario';
   if (perfilGrid) {
-    // Base: Inventario + Alerta siempre visibles, más Operaciones salvo en áreas donde no aplica.
-    const visibles = 3 - (esAreaSinSalida ? 1 : 0);
-    perfilGrid.style.gridTemplateColumns = visibles === 3 ? '1fr 1fr 1fr' : visibles === 2 ? '1fr 1fr' : '1fr';
+    // Inventario + Horas Extra + Reporte de Alertas siempre visibles (3 columnas fijas).
+    // Verificador de Operaciones quedó oculto permanentemente; su espacio lo ocupa Horas Extra.
+    perfilGrid.style.gridTemplateColumns = '1fr 1fr 1fr';
   }
   if (tabTransporteHeader) tabTransporteHeader.style.display = esAreaSinTransporte ? 'none' : '';
   if (tabTransporteMobile && esAreaSinTransporte) tabTransporteMobile.style.display = 'none';
@@ -28428,7 +28450,7 @@ renderConexionEstado();
       const txt = document.querySelector('#usuariosOnline span:last-child');
 
       if (e.code === 'resource-exhausted') {
-        if (dot) { dot.style.background = '#f97316'; dot.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.3)'; }
+        if (dot) { dot.style.background = '#f59e0b'; dot.style.boxShadow = '0 0 0 2px rgba(245,158,11,0.3)'; }
         if (txt) txt.textContent = 'Cuota';
         showToast('🟠', 'Firebase: límite diario alcanzado', 6000);
       } else if (_fallosFirebase >= 2) {
@@ -30482,7 +30504,7 @@ function _fichaDigitalEstiloFila(filtrados, it) {
 function _fichaDigitalEstiloCalidad(codigo) {
   const es2da = String(codigo).trim().startsWith('2-');
   return es2da
-    ? 'background:rgba(249,115,22,0.28);border-color:#f97316;font-weight:600'
+    ? 'background:rgba(245,158,11,0.28);border-color:#f59e0b;font-weight:600'
     : 'background:rgba(16,185,129,0.18);border-color:var(--success)';
 }
 
@@ -31622,6 +31644,54 @@ function _escapeHtml(s) {
 }
 </script>
 
+<!-- ══════════ MODAL: Horas Extra ══════════ -->
+<div class="modal-overlay" id="modalHorasExtra" onclick="if(event.target===this)cerrarModalHorasExtra()" style="z-index:1300">
+  <div class="modal" style="max-width:480px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:0.85rem;border-bottom:1px solid var(--border)">
+      <h3 style="margin:0;display:flex;align-items:center;gap:0.5rem">
+        <span style="font-size:1.3rem;filter:drop-shadow(0 0 6px rgba(245,158,11,0.4))">⏰</span> Horas Extra
+      </h3>
+      <div style="display:flex;gap:0.4rem;flex-shrink:0">
+        <button id="heBtnVolver" title="Volver" onclick="_heVolverAtras()"
+          style="display:none;width:34px;height:34px;padding:0;flex-shrink:0;border-radius:8px;border:1px solid rgba(74,222,128,0.35);background:rgba(74,222,128,0.12);color:#4ade80;font-size:1.1rem;font-weight:700;cursor:pointer;align-items:center;justify-content:center;transition:all 0.15s">⬅️</button>
+        <button class="btn btn-ghost" title="Gestionar personas" onclick="_heAbrirGestionPersonas()"
+          style="width:34px;height:34px;padding:0;flex-shrink:0;font-size:1rem">⚙️</button>
+        <button title="Cerrar" onclick="cerrarModalHorasExtra()"
+          style="width:34px;height:34px;padding:0;flex-shrink:0;border-radius:8px;border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.12);color:var(--danger);font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s">✖</button>
+      </div>
+    </div>
+    <div id="heContenido"></div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL: PIN de seguridad para acciones sensibles de Horas Extra ══════════ -->
+<div class="modal-overlay" id="modalPinHorasExtra" style="z-index:1350">
+  <div class="modal" style="max-width:360px">
+    <h3 style="margin-bottom:0.9rem">🔒 <span id="hePinTitulo">Ingresa el PIN de seguridad</span></h3>
+    <div class="field" id="hePinValorWrap" style="display:none">
+      <label>Nueva cantidad de horas</label>
+      <input type="number" step="0.5" min="0.5" id="hePinValorInput" placeholder="ej: 3"
+        style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:'Barlow',sans-serif">
+    </div>
+    <div class="field" id="hePinComentarioWrap" style="display:none">
+      <label>Motivo / comentario</label>
+      <textarea id="hePinComentarioInput" rows="2" maxlength="300"
+        style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:'Barlow',sans-serif;resize:vertical"></textarea>
+    </div>
+    <div class="field">
+      <label>PIN de seguridad</label>
+      <input type="password" id="hePinInput" placeholder="••••" inputmode="numeric"
+        style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:12px 14px;font-family:'Barlow',sans-serif;font-size:1rem;text-align:center;letter-spacing:0.3em"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();_heConfirmarPin();}">
+    </div>
+    <p id="hePinError" style="display:none;color:var(--danger);font-size:0.82rem;margin:0.4rem 0 0.6rem">PIN incorrecto</p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="_heCancelarPin()">✖ Cancelar</button>
+      <button class="btn btn-primary" onclick="_heConfirmarPin()">✅ Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════ MODAL genérico: ver imagen ampliada (tap para ampliar) ══════════ -->
 <div class="modal-overlay" id="modalImagenGrande" onclick="if(event.target===this)cerrarImagenGrande()" style="z-index:1100;background:rgba(0,0,0,0.88)">
   <div style="max-width:94vw;max-height:94vh;position:relative;display:flex;align-items:center;justify-content:center;margin:auto">
@@ -31630,6 +31700,609 @@ function _escapeHtml(s) {
       style="position:absolute;top:-14px;right:-14px;width:34px;height:34px;border-radius:50%;background:var(--danger);border:2px solid var(--surface);color:#fff;font-size:1rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
   </div>
 </div>
+<script>
+// ══════════════════════════════════════════════════════
+//  MÓDULO: HORAS EXTRA
+//  Cada persona registra sus propias horas extra por día.
+//  Ver el listado de otra persona es de solo lectura.
+//  Editar/borrar un registro, o agregar/quitar personas de la
+//  lista, requiere el PIN de seguridad.
+// ══════════════════════════════════════════════════════
+const HORAS_EXTRA_PIN = '2907';
+const HE_PERSONAS_DEFAULT = [
+  'Edgar Leonel Gómez Saravia',
+  'Margareth Glorisel Salachini Rodriguez',
+  'Katerin Geraldyn Guitierrez De La Cruz',
+  'Luis Ángel Ortiz Donis',
+  'Josué David Méndez Aguilar',
+  'Bryan Alexander Reyes Monroy',
+  'Nelson Alberto Jacobo Marroquin',
+  'Eder Rene Davila Herrera',
+  'Alison Marleny Parada Ramos',
+  'Leidy Esmeralda Marroquín Samayoa',
+  'Eduardo de Jesus Rodriguez Morataya',
+  'Nelson David Chay Olivares'
+];
+let _hePersonas = [];
+let _heUsuarioActual = null;   // nombre que este dispositivo tiene guardado como "yo"
+let _heViendoPersona = null;   // nombre cuyo listado se está mostrando ahora mismo
+let _heRegistros = [];         // caché de registros de la persona que se está viendo
+let _hePinResolve = null;
+let _heVolverHandler = null;   // función a la que regresa el botón "←" del header (null = ocultarlo)
+
+function _heVolverAtras() {
+  if (_heVolverHandler) _heVolverHandler();
+}
+function _heMostrarBtnVolver(fn) {
+  _heVolverHandler = fn;
+  const btn = document.getElementById('heBtnVolver');
+  if (btn) btn.style.display = 'flex';
+}
+function _heOcultarBtnVolver() {
+  _heVolverHandler = null;
+  const btn = document.getElementById('heBtnVolver');
+  if (btn) btn.style.display = 'none';
+}
+
+function abrirHorasExtra() {
+  playClick(); vibrate([15]);
+  document.getElementById('modalHorasExtra').classList.add('open');
+  _heUsuarioActual = localStorage.getItem('conteoPT_heUsuario') || null;
+
+  const _heMostrarPantallaCorrecta = () => {
+    if (_heUsuarioActual && _hePersonas.includes(_heUsuarioActual)) {
+      _heViendoPersona = _heUsuarioActual;
+      _heRenderPrincipal();
+    } else {
+      _heUsuarioActual = null;
+      _heRenderSelectorUsuario();
+    }
+  };
+
+  if (_hePersonas.length) {
+    // Ya hay datos en caché de una apertura anterior: se muestra la pantalla
+    // correcta de inmediato (sin parpadeo de "Cargando...") y se refresca la
+    // lista de personas en segundo plano por si hubo cambios.
+    _heMostrarPantallaCorrecta();
+    _heCargarPersonas();
+  } else {
+    document.getElementById('heContenido').innerHTML = '<p style="text-align:center;color:var(--muted)">Cargando...</p>';
+    _heCargarPersonas().then(_heMostrarPantallaCorrecta);
+  }
+}
+
+function cerrarModalHorasExtra() {
+  document.getElementById('modalHorasExtra').classList.remove('open');
+}
+
+async function _heCargarPersonas() {
+  try {
+    const doc = await window.colGlobal('horasExtra_config').doc('personas').get();
+    const data = doc.exists ? doc.data() : null;
+    if (data && Array.isArray(data.nombres) && data.nombres.length) {
+      _hePersonas = data.nombres;
+    } else {
+      _hePersonas = HE_PERSONAS_DEFAULT.slice();
+      await window.colGlobal('horasExtra_config').doc('personas').set({ nombres: _hePersonas });
+    }
+  } catch (e) {
+    _hePersonas = HE_PERSONAS_DEFAULT.slice();
+    showToast('⚠️', 'Sin conexión: mostrando lista local de personas');
+  }
+}
+
+function _heJsStr(s) {
+  return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+// ── Pantalla: elegir "quién soy" ──
+function _heRenderSelectorUsuario() {
+  const cont = document.getElementById('heContenido');
+  _heOcultarBtnVolver();
+  const botones = _hePersonas.map(nombre => `
+    <button class="btn btn-ghost" style="width:100%;text-align:left" onclick="_heSeleccionarUsuario('${_heJsStr(nombre)}')">${_escapeHtml(nombre)}</button>
+  `).join('') || '<p style="color:var(--muted);text-align:center;padding:1rem 0">No hay personas en la lista todavía</p>';
+  cont.innerHTML = `
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:0.9rem;text-align:center">Selecciona tu nombre para registrar tus horas extra</p>
+    <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem">${botones}</div>
+    <button class="btn btn-ghost" style="width:100%" onclick="_heAbrirGestionPersonas()">⚙️ Agregar / quitar personas</button>
+  `;
+}
+
+function _heSeleccionarUsuario(nombre) {
+  _heUsuarioActual = nombre;
+  localStorage.setItem('conteoPT_heUsuario', nombre);
+  _heViendoPersona = nombre;
+  playClick(); vibrate([15]);
+  _heRenderPrincipal();
+}
+
+function _heCambiarUsuario() {
+  localStorage.removeItem('conteoPT_heUsuario');
+  _heUsuarioActual = null;
+  _heRenderSelectorUsuario();
+}
+
+// ── Pantalla principal: mi resumen + registro de mis horas ──
+async function _heRenderPrincipal() {
+  const cont = document.getElementById('heContenido');
+  _heViendoPersona = _heUsuarioActual;
+  _heOcultarBtnVolver();
+  cont.innerHTML = `
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.9rem">
+      <div style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:0.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escapeHtml(_heUsuarioActual)}</div>
+      <button class="btn btn-ghost" style="width:38px;height:38px;padding:0;flex-shrink:0" title="Cambiar mi usuario" onclick="_heCambiarUsuario()">👤</button>
+    </div>
+    <button class="btn btn-ghost" style="width:100%;margin-bottom:1rem" onclick="_heAbrirResumen()">📊 Ver resumen de todos</button>
+    <div style="text-align:center;margin-bottom:1rem">
+      <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Total acumulado</div>
+      <div id="heTotalHoras" style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:2.2rem;color:var(--accent)">—</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.5rem;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.35);border-radius:8px;padding:0.6rem 0.8rem;margin-bottom:0.9rem">
+      <span style="font-size:1.1rem">📝</span>
+      <span style="font-size:0.85rem;color:var(--text)">Registrando para: <strong style="color:var(--accent)">${_escapeHtml(_heViendoPersona)}</strong></span>
+    </div>
+    <div class="form-row" style="margin-bottom:0.75rem">
+      <div class="field">
+        <label>Fecha</label>
+        <input type="date" id="heFecha" value="${new Date().toISOString().slice(0,10)}"
+          style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:'Barlow',sans-serif;color-scheme:dark">
+      </div>
+      <div class="field">
+        <label>Horas extra</label>
+        <input type="number" id="heHoras" step="0.5" min="0.5" placeholder="ej: 2.5"
+          style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:'Barlow',sans-serif">
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:0.9rem">
+      <label>Motivo / comentario <span style="color:var(--danger)">*</span></label>
+      <textarea id="heComentario" rows="2" placeholder="Ej: Apoyo en carga de camión turno noche" maxlength="300"
+        style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:'Barlow',sans-serif;resize:vertical"></textarea>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:1.25rem" onclick="_heAgregarRegistro()">➕ Agregar registro</button>
+    <div id="heListaRegistros"></div>
+  `;
+  await _heCargarYRenderRegistros(true);
+}
+
+function _heCambiarVista(nombre) {
+  _heViendoPersona = nombre;
+  _heRenderPrincipal();
+}
+
+// ── Pantalla: resumen general de horas acumuladas por persona ──
+let _heResumenCache = null; // último resumen calculado, para abrir sin parpadeo
+
+function _heRenderListaResumen(totales) {
+  const filas = Object.entries(totales)
+    .sort((a, b) => b[1] - a[1])
+    .map(([nombre, total], i) => `
+      <div style="display:flex;align-items:center;gap:0.6rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0.6rem 0.8rem;margin-bottom:0.4rem">
+        <span style="color:var(--muted);font-size:0.8rem;min-width:1.4rem">${i + 1}.</span>
+        <span style="flex:1;min-width:0;font-size:0.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escapeHtml(nombre)}</span>
+        <span style="color:var(--accent);font-weight:700;white-space:nowrap">${_heFormatoHoras(total)} h</span>
+      </div>
+    `).join('') || '<p style="text-align:center;color:var(--muted)">Sin registros todavía</p>';
+  const granTotal = Object.values(totales).reduce((s, v) => s + v, 0);
+  const lista = document.getElementById('heResumenLista');
+  if (!lista) return;
+  lista.innerHTML = `
+    <div style="text-align:center;margin-bottom:1rem">
+      <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Total de todos</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent)">${_heFormatoHoras(granTotal)} h</div>
+    </div>
+    ${filas}
+  `;
+}
+
+async function _heCargarResumen() {
+  const snap = await window.colGlobal('horasExtra').get();
+  const totales = {};
+  snap.docs.forEach(d => {
+    const data = d.data();
+    const persona = data.persona || 'Sin nombre';
+    totales[persona] = (totales[persona] || 0) + (Number(data.horas) || 0);
+  });
+  // Incluir también a quienes están en la lista pero aún no tienen registros
+  _hePersonas.forEach(n => { if (!(n in totales)) totales[n] = 0; });
+  _heResumenCache = totales;
+  return totales;
+}
+
+async function _heAbrirResumen() {
+  const cont = document.getElementById('heContenido');
+  _heMostrarBtnVolver(_heRenderPrincipal);
+  cont.innerHTML = `
+    <h3 style="margin-bottom:0.9rem;text-align:center">📊 Resumen de horas acumuladas</h3>
+    <div id="heResumenLista">${_heResumenCache ? '' : '<p style="text-align:center;color:var(--muted)">Cargando...</p>'}</div>
+    <div class="form-row" style="margin-top:1rem">
+      <button class="btn btn-primary" style="width:100%" onclick="_heExportarExcel()">📥 Excel</button>
+      <button class="btn btn-secondary" style="width:100%" onclick="_heGenerarPDF()">🖨️ PDF</button>
+    </div>
+    <button class="btn btn-danger" style="width:100%;margin-top:0.6rem" onclick="_heBorrarTodosRegistros()">🗑️ Borrar todos los registros (reiniciar ciclo)</button>
+  `;
+  if (_heResumenCache) _heRenderListaResumen(_heResumenCache);
+  try {
+    const totales = await _heCargarResumen();
+    _heRenderListaResumen(totales);
+  } catch (e) {
+    if (!_heResumenCache) document.getElementById('heResumenLista').innerHTML = '<p style="text-align:center;color:var(--danger)">Error al cargar el resumen</p>';
+  }
+}
+
+async function _heExportarExcel() {
+  const res = await _hePedirPin('🔒 Ingresa el PIN para generar el Excel de Horas Extra');
+  if (!res.ok) return;
+  try {
+    showToast('⏳', 'Generando Excel...');
+    const snap = await window.colGlobal('horasExtra').get();
+    const registros = snap.docs.map(d => d.data())
+      .sort((a, b) => (a.persona || '').localeCompare(b.persona || '') || (a.fecha || '').localeCompare(b.fecha || ''));
+
+    const filasDetalle = registros.map(r => ({
+      'Persona': r.persona || '',
+      'Fecha': _heFormatoFecha(r.fecha),
+      'Horas': Number(r.horas) || 0,
+      'Comentario': r.comentario || ''
+    }));
+
+    const totales = {};
+    registros.forEach(r => { totales[r.persona || 'Sin nombre'] = (totales[r.persona || 'Sin nombre'] || 0) + (Number(r.horas) || 0); });
+    _hePersonas.forEach(n => { if (!(n in totales)) totales[n] = 0; });
+    const filasResumen = Object.entries(totales)
+      .sort((a, b) => b[1] - a[1])
+      .map(([persona, total]) => ({ 'Persona': persona, 'Total horas': total }));
+
+    const wb = XLSX.utils.book_new();
+    const wsResumen = XLSX.utils.json_to_sheet(filasResumen);
+    XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+    const wsDetalle = XLSX.utils.json_to_sheet(filasDetalle);
+    XLSX.utils.book_append_sheet(wb, wsDetalle, 'Detalle');
+
+    XLSX.writeFile(wb, `Horas_Extra_${_fechaCortaTag()}.xlsx`);
+    showToast('✅', 'Excel generado');
+  } catch (e) {
+    showToast('⚠️', 'Error al generar el Excel: ' + (e.message || e));
+  }
+}
+
+async function _heGenerarPDF() {
+  const res = await _hePedirPin('🔒 Ingresa el PIN para generar el PDF de Horas Extra');
+  if (!res.ok) return;
+
+  // Abrimos la ventana ANTES de cualquier await, para que el navegador la
+  // reconozca como originada por el clic del usuario y no la bloquee como
+  // popup (mismo criterio que generarPDFDespacho / generarPDFTransporte).
+  const win = window.open('', '_blank');
+  if (!win) { showToast('⚠️', 'Habilita ventanas emergentes para el PDF'); return; }
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Generando PDF…</title></head><body style="font-family:Arial,sans-serif;color:#64748b;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div>Generando PDF…</div></body></html>');
+  win.document.close();
+
+  try {
+    const snap = await window.colGlobal('horasExtra').get();
+    const registros = snap.docs.map(d => d.data());
+
+    const totales = {};
+    registros.forEach(r => { totales[r.persona || 'Sin nombre'] = (totales[r.persona || 'Sin nombre'] || 0) + (Number(r.horas) || 0); });
+    _hePersonas.forEach(n => { if (!(n in totales)) totales[n] = 0; });
+    const filasResumen = Object.entries(totales).sort((a, b) => b[1] - a[1]);
+    const granTotal = filasResumen.reduce((s, [, v]) => s + v, 0);
+
+    const detalleOrdenado = registros.slice()
+      .sort((a, b) => (a.persona || '').localeCompare(b.persona || '') || (a.fecha || '').localeCompare(b.fecha || ''));
+
+    const filasResumenHtml = filasResumen.map(([persona, total]) => `
+      <tr><td>${persona}</td><td style="text-align:right;font-weight:700">${_heFormatoHoras(total)} h</td></tr>
+    `).join('');
+
+    // Detalle agrupado: una tabla independiente por persona, con su propio subtotal
+    const gruposPorPersona = {};
+    detalleOrdenado.forEach(r => {
+      const p = r.persona || 'Sin nombre';
+      (gruposPorPersona[p] = gruposPorPersona[p] || []).push(r);
+    });
+    const bloquesDetalleHtml = Object.entries(gruposPorPersona).map(([persona, regs]) => {
+      const subtotal = regs.reduce((s, r) => s + (Number(r.horas) || 0), 0);
+      const filas = regs.map(r => `
+        <tr>
+          <td>${_heFormatoFecha(r.fecha)}</td>
+          <td style="text-align:right;font-weight:700">${_heFormatoHoras(r.horas)} h</td>
+          <td style="font-size:8.5px;color:#475569">${r.comentario || ''}</td>
+        </tr>
+      `).join('');
+      return `
+        <div style="page-break-inside:avoid;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;background:#eef2ff;border:1px solid #c7d2fe;border-radius:6px 6px 0 0;padding:6px 10px">
+            <span style="font-size:10.5px;font-weight:800;color:#1e3a8a">👤 ${persona}</span>
+            <span style="font-size:9.5px;font-weight:700;color:#1e3a8a">Subtotal: ${_heFormatoHoras(subtotal)} h</span>
+          </div>
+          <table style="margin-top:0">
+            <thead><tr><th>Fecha</th><th style="text-align:right">Horas</th><th>Comentario</th></tr></thead>
+            <tbody>${filas}</tbody>
+          </table>
+        </div>`;
+    }).join('') || '<p style="text-align:center;color:#94a3b8">Sin registros</p>';
+
+    const css = `<style>
+      body{font-family:Arial,sans-serif;color:#1e293b;margin:0}
+      table{width:100%;border-collapse:collapse;margin-top:6px}
+      thead tr{background:#1e3a8a;color:#fff}
+      thead th{padding:5px 8px;font-size:8.5px;text-align:left;text-transform:uppercase;letter-spacing:.05em}
+      tbody tr:nth-child(even){background:#f8fafc}
+      tbody td{padding:6px 8px;font-size:9.5px;border-bottom:1px solid #e2e8f0}
+      tfoot td{background:#1e3a8a;color:#fff;font-weight:700;font-size:10px;padding:6px 8px}
+      h2{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.1em;margin:18px 0 5px;padding-bottom:3px;border-bottom:1px solid #e2e8f0}
+      .ft{margin-top:16px;border-top:1px solid #e2e8f0;padding-top:8px;font-size:8px;color:#94a3b8;text-align:center}
+      @media print{body{padding:8px}@page{margin:1cm}}
+    </style>`;
+
+    const titulo = `Horas Extra — Reporte — ${_fechaCortaTag()}`;
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${titulo}</title>
+    <link rel="icon" type="image/png" href="${FAVICON_PT_BASE64}">
+    ${css}</head><body>
+    <div style="padding:1cm">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding-bottom:12px;border-bottom:3px solid #1e3a8a">
+        <img src="${LOGO_PDF}" style="height:64px;width:auto" alt="Logo">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#1e3a8a;text-transform:uppercase;margin-bottom:6px">⏰ Reporte de Horas Extra</div>
+          <div style="font-size:11px;color:#64748b">Generado: ${new Date().toLocaleString('es-GT')} · ${registros.length} registro(s)</div>
+        </div>
+      </div>
+
+      <h2>📊 Resumen por persona</h2>
+      <table>
+        <thead><tr><th>Persona</th><th style="text-align:right">Total horas</th></tr></thead>
+        <tbody>${filasResumenHtml}</tbody>
+        <tfoot><tr><td>TOTAL GENERAL</td><td style="text-align:right">${_heFormatoHoras(granTotal)} h</td></tr></tfoot>
+      </table>
+
+      <h2>📋 Detalle de registros por persona</h2>
+      ${bloquesDetalleHtml}
+
+      <div class="ft">Conteo PT — Sistema de Gestión de Inventario · Módulo Horas Extra</div>
+    </div>
+    <script>window.addEventListener('load', () => setTimeout(() => window.print(), 400));<\/script>
+    </body></html>`;
+
+    win.location.href = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+  } catch (e) {
+    showToast('⚠️', 'Error al generar el PDF: ' + (e.message || e));
+    win.close();
+  }
+}
+
+async function _heBorrarTodosRegistros() {
+  const res = await _hePedirPin('⚠️ Esto borrará TODOS los registros de TODAS las personas. Confirma con el PIN');
+  if (!res.ok) return;
+  try {
+    showToast('⏳', 'Borrando registros...');
+    const snap = await window.colGlobal('horasExtra').get();
+    if (!snap.docs.length) { showToast('ℹ️', 'No había registros que borrar'); return; }
+    await _commitEnLotes(snap.docs, (batch, doc) => batch.delete(doc.ref));
+    _heResumenCache = null;
+    showToast('🗑️', `${snap.docs.length} registro(s) eliminados — ciclo reiniciado`);
+    await _heAbrirResumen();
+  } catch (e) {
+    showToast('⚠️', 'Error al borrar los registros: ' + (e.message || e));
+  }
+}
+
+async function _heCargarYRenderRegistros(esPropio) {
+  const lista = document.getElementById('heListaRegistros');
+  lista.innerHTML = '<p style="text-align:center;color:var(--muted)">Cargando registros...</p>';
+  try {
+    const snap = await window.colGlobal('horasExtra').where('persona', '==', _heViendoPersona).get();
+    _heRegistros = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+    const total = _heRegistros.reduce((s, r) => s + (Number(r.horas) || 0), 0);
+    document.getElementById('heTotalHoras').textContent = _heFormatoHoras(total) + ' h';
+    if (!_heRegistros.length) {
+      lista.innerHTML = '<p style="text-align:center;color:var(--muted);padding:1rem 0">Sin registros todavía</p>';
+      return;
+    }
+    lista.innerHTML = _heRegistros.map(r => `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:0.7rem 0.9rem;margin-bottom:0.5rem">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem">
+          <div style="min-width:0">
+            <div style="font-weight:600;font-size:0.9rem">${_heFormatoFecha(r.fecha)}</div>
+            <div style="color:var(--accent);font-weight:700">${_heFormatoHoras(r.horas)} h</div>
+          </div>
+          ${esPropio ? `
+          <div style="display:flex;gap:0.4rem;flex-shrink:0">
+            <button class="btn btn-ghost" style="padding:6px 10px" onclick="_heEditarRegistro('${r.id}')" title="Editar">✏️</button>
+            <button class="btn btn-danger" style="padding:6px 10px" onclick="_heBorrarRegistro('${r.id}')" title="Borrar">🗑️</button>
+          </div>` : ''}
+        </div>
+        ${r.comentario ? `<div style="margin-top:0.4rem;padding-top:0.4rem;border-top:1px solid var(--border);font-size:0.82rem;color:var(--text);opacity:0.85">💬 ${_escapeHtml(r.comentario)}</div>` : ''}
+      </div>
+    `).join('');
+  } catch (e) {
+    lista.innerHTML = '<p style="text-align:center;color:var(--danger)">Error al cargar los registros</p>';
+  }
+}
+
+function _heFormatoHoras(n) {
+  const num = Number(n) || 0;
+  return (Math.round(num * 100) / 100).toString().replace('.', ',');
+}
+function _heFormatoFecha(fechaStr) {
+  if (!fechaStr) return '—';
+  const partes = fechaStr.split('-');
+  if (partes.length !== 3) return fechaStr;
+  const [y, m, d] = partes;
+  return `${d}/${m}/${y}`;
+}
+
+async function _heAgregarRegistro() {
+  const fecha = document.getElementById('heFecha').value;
+  const horas = parseFloat(document.getElementById('heHoras').value);
+  const comentario = (document.getElementById('heComentario').value || '').trim();
+  if (!fecha) { showToast('⚠️', 'Selecciona la fecha'); return; }
+  if (!horas || horas <= 0) { showToast('⚠️', 'Ingresa una cantidad de horas válida'); return; }
+  if (!comentario) { showToastCentro('⚠️', 'Escribe el motivo o comentario del registro'); document.getElementById('heComentario').focus(); return; }
+  try {
+    await window.colGlobal('horasExtra').add({ persona: _heViendoPersona, fecha, horas, comentario, timestamp: Date.now() });
+    document.getElementById('heHoras').value = '';
+    document.getElementById('heComentario').value = '';
+    showToast('✅', 'Registro agregado');
+    playClick(); vibrate([15]);
+    await _heCargarYRenderRegistros(true);
+  } catch (e) {
+    showToast('⚠️', 'Error al guardar: ' + (e.message || e));
+  }
+}
+
+async function _heEditarRegistro(id) {
+  const reg = _heRegistros.find(r => r.id === id);
+  if (!reg) return;
+  const res = await _hePedirPin('Editar registro del ' + _heFormatoFecha(reg.fecha), { conValor: true, valorActual: reg.horas, conComentario: true, comentarioActual: reg.comentario });
+  if (!res.ok) return;
+  if (!res.comentario) { showToast('⚠️', 'El comentario no puede quedar vacío'); return; }
+  try {
+    await window.colGlobal('horasExtra').doc(id).update({ horas: res.valor, comentario: res.comentario });
+    showToast('💾', 'Registro actualizado');
+    await _heCargarYRenderRegistros(true);
+  } catch (e) {
+    showToast('⚠️', 'Error al actualizar: ' + (e.message || e));
+  }
+}
+
+async function _heBorrarRegistro(id) {
+  const reg = _heRegistros.find(r => r.id === id);
+  if (!reg) return;
+  const res = await _hePedirPin('Borrar registro del ' + _heFormatoFecha(reg.fecha));
+  if (!res.ok) return;
+  try {
+    await window.colGlobal('horasExtra').doc(id).delete();
+    showToast('🗑️', 'Registro eliminado');
+    await _heCargarYRenderRegistros(true);
+  } catch (e) {
+    showToast('⚠️', 'Error al eliminar: ' + (e.message || e));
+  }
+}
+
+// ── Gestión de personas (agregar / quitar) — protegida con PIN ──
+function _heAbrirGestionPersonas() {
+  _heRenderGestionPersonas();
+}
+
+function _heVolverDesdeGestion() {
+  if (_heUsuarioActual) _heRenderPrincipal(); else _heRenderSelectorUsuario();
+}
+
+function _heRenderGestionPersonas() {
+  const cont = document.getElementById('heContenido');
+  _heMostrarBtnVolver(_heVolverDesdeGestion);
+  const filas = _hePersonas.map(n => `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:0.6rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0.6rem 0.8rem;margin-bottom:0.4rem">
+      <span style="font-size:0.88rem;min-width:0">${_escapeHtml(n)}</span>
+      <button onclick="_heEliminarPersona('${_heJsStr(n)}')" title="Quitar"
+        style="width:32px;height:32px;padding:0;flex-shrink:0;border-radius:8px;border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.12);color:var(--danger);font-size:0.95rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s">✕</button>
+    </div>
+  `).join('') || '<p style="color:var(--muted);text-align:center">Sin personas en la lista</p>';
+  cont.innerHTML = `
+    <h3 style="margin-bottom:0.75rem">⚙️ Personas registradas</h3>
+    <div style="margin-bottom:1rem">${filas}</div>
+    <div class="field">
+      <label>Agregar nueva persona</label>
+      <input type="text" id="heNuevaPersona" placeholder="Nombre completo"
+        style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:'Barlow',sans-serif">
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="_heAgregarPersona()">➕ Agregar (pide PIN)</button>
+  `;
+}
+
+async function _heAgregarPersona() {
+  const input = document.getElementById('heNuevaPersona');
+  const nombre = (input.value || '').trim();
+  if (!nombre) { showToast('⚠️', 'Escribe el nombre'); return; }
+  if (_hePersonas.some(n => n.toLowerCase() === nombre.toLowerCase())) { showToast('⚠️', 'Esa persona ya está en la lista'); return; }
+  const res = await _hePedirPin('Agregar a "' + nombre + '" a la lista');
+  if (!res.ok) return;
+  _hePersonas.push(nombre);
+  try {
+    await window.colGlobal('horasExtra_config').doc('personas').set({ nombres: _hePersonas });
+    showToast('✅', 'Persona agregada');
+    _heRenderGestionPersonas();
+  } catch (e) {
+    _hePersonas.pop();
+    showToast('⚠️', 'Error al guardar: ' + (e.message || e));
+  }
+}
+
+async function _heEliminarPersona(nombre) {
+  const res = await _hePedirPin('Quitar a "' + nombre + '" de la lista');
+  if (!res.ok) return;
+  const anterior = _hePersonas.slice();
+  _hePersonas = _hePersonas.filter(n => n !== nombre);
+  try {
+    await window.colGlobal('horasExtra_config').doc('personas').set({ nombres: _hePersonas });
+    showToast('🗑️', 'Persona eliminada de la lista');
+    if (_heUsuarioActual === nombre) { localStorage.removeItem('conteoPT_heUsuario'); _heUsuarioActual = null; }
+    _heRenderGestionPersonas();
+  } catch (e) {
+    _hePersonas = anterior;
+    showToast('⚠️', 'Error al guardar: ' + (e.message || e));
+  }
+}
+
+// ── Modal genérico de PIN de seguridad (2907) para acciones sensibles de Horas Extra ──
+function _hePedirPin(titulo, opts) {
+  opts = opts || {};
+  return new Promise(resolve => {
+    _hePinResolve = resolve;
+    document.getElementById('hePinTitulo').textContent = titulo || 'Ingresa el PIN de seguridad';
+    const wrapValor = document.getElementById('hePinValorWrap');
+    if (opts.conValor) {
+      wrapValor.style.display = 'block';
+      document.getElementById('hePinValorInput').value = opts.valorActual != null ? opts.valorActual : '';
+    } else {
+      wrapValor.style.display = 'none';
+    }
+    const wrapComentario = document.getElementById('hePinComentarioWrap');
+    if (opts.conComentario) {
+      wrapComentario.style.display = 'block';
+      document.getElementById('hePinComentarioInput').value = opts.comentarioActual || '';
+    } else {
+      wrapComentario.style.display = 'none';
+    }
+    document.getElementById('hePinInput').value = '';
+    document.getElementById('hePinError').style.display = 'none';
+    document.getElementById('modalPinHorasExtra').classList.add('open');
+    setTimeout(() => document.getElementById('hePinInput').focus(), 50);
+  });
+}
+
+function _heConfirmarPin() {
+  const pin = document.getElementById('hePinInput').value.trim();
+  if (pin !== HORAS_EXTRA_PIN) {
+    document.getElementById('hePinError').style.display = 'block';
+    vibrate([30, 40, 30]);
+    return;
+  }
+  const wrapValor = document.getElementById('hePinValorWrap');
+  const conValor = wrapValor.style.display !== 'none';
+  let valor = null;
+  if (conValor) {
+    valor = parseFloat(document.getElementById('hePinValorInput').value);
+    if (!valor || valor <= 0) { showToast('⚠️', 'Ingresa una cantidad de horas válida'); return; }
+  }
+  const wrapComentario = document.getElementById('hePinComentarioWrap');
+  const conComentario = wrapComentario.style.display !== 'none';
+  let comentario = undefined;
+  if (conComentario) {
+    comentario = (document.getElementById('hePinComentarioInput').value || '').trim();
+  }
+  document.getElementById('modalPinHorasExtra').classList.remove('open');
+  if (_hePinResolve) { _hePinResolve({ ok: true, valor, comentario }); _hePinResolve = null; }
+}
+
+function _heCancelarPin() {
+  document.getElementById('modalPinHorasExtra').classList.remove('open');
+  if (_hePinResolve) { _hePinResolve({ ok: false }); _hePinResolve = null; }
+}
+</script>
+
 <script>
 function verImagenGrande(url) {
   if (!url) return;

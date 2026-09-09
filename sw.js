@@ -1,3 +1,38 @@
+// ── Conteo PT — Service Worker v4.80.0 ─────────────────────────────────────
+// Cambios v4.80.0 (Horas Extra ⏰ — mejoras):
+//   · NUEVO — Campo "Motivo / comentario" obligatorio en cada registro de
+//     Horas Extra: no se puede guardar sin explicar el motivo. Si falta, se
+//     muestra un aviso centrado en medio de la pantalla (antes solo salía
+//     el toast pequeño de la esquina, fácil de pasar por alto).
+//   · NUEVO — Encabezado "📝 Registrando para: [Nombre]" arriba del
+//     formulario, para tener siempre claro a quién se le están cargando las
+//     horas.
+//   · NUEVO — Pantalla "📊 Ver resumen de todos": lista a todas las personas
+//     con su total acumulado, ordenadas de mayor a menor, más el gran total.
+//   · NUEVO — Exportar a Excel (.xlsx) desde el resumen: hoja de resumen por
+//     persona + hoja de detalle (persona, fecha, horas, comentario).
+//   · NUEVO — Generar PDF desde el resumen, con el mismo formato que el
+//     resto de reportes de Conteo PT (logo, encabezado azul, tablas): una
+//     tabla de resumen por persona y, en el detalle, una tabla separada por
+//     cada persona con su propio subtotal.
+//   · NUEVO — Ambos reportes (Excel y PDF) quedan protegidos con el PIN de
+//     seguridad del módulo antes de generarse.
+//   · NUEVO — Botón "🗑️ Borrar todos los registros (reiniciar ciclo)":
+//     protegido con PIN, borra en lote todos los registros de todas las
+//     personas para arrancar un nuevo periodo.
+//   · MEJORADO — El botón "←" de volver ahora vive junto a "⚙️" y "✖" en la
+//     esquina superior derecha del modal (icono ⬅️ verde), en vez de un
+//     botón de ancho completo en medio de la pantalla; mismo ajuste de
+//     tamaño para los botones "✕" de quitar persona y "⚙️/👤" del header,
+//     que antes se veían demasiado grandes.
+//   · MEJORADO — El ícono del selector de fecha (calendario) ahora se ve
+//     claramente en el tema oscuro (antes casi invisible).
+//   · MEJORADO — Al abrir el módulo o el resumen por segunda vez en la
+//     misma sesión, ya no parpadea la pantalla de "Cargando…": se muestra
+//     de inmediato lo último visto en caché mientras se actualiza en
+//     segundo plano.
+//
+
 // ── Conteo PT — Service Worker v4.79.1 ─────────────────────────────────────
 // Cambios v4.79.1 (Alertas 🚨 — ajuste):
 //   · MEJORADO — Overlay verde de éxito al guardar una alerta ("¡Alerta
@@ -1901,7 +1936,7 @@
 //   · Firebase Storage habilitado: se agrega el SDK firebase-storage-compat
 //     v9.23.0, html2canvas v1.4.1 y jsPDF v2.5.1 como dependencias externas.
 
-const CACHE_NAME = 'conteo-pt-v4.79.1';
+const CACHE_NAME = 'conteo-pt-v4.80.0';
 
 const ASSETS = [
   './',
