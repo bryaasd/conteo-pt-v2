@@ -1,3 +1,25 @@
+// ── Conteo PT — Service Worker v4.81.0 ─────────────────────────────────────
+// Cambios v4.81.0 (Alertas 🚨 — área seleccionable y copiar imagen):
+//   · NUEVO — El campo "Área" del modal Reportar Alerta ahora es un selector
+//     obligatorio (botón que rota al tocarlo, igual que Turno): Tubería,
+//     Costanera, Lámina, Tiras de Bobinas, Bodega de Segunda y Auditoría.
+//     Viene vacío al abrir; no se puede guardar sin elegirlo. La alerta y
+//     sus fotos se guardan en el área elegida (antes, siempre en el área
+//     activa). Al editar una alerta, el área queda fija.
+//   · NUEVO — Botón "📸 Copiar y Guardar": genera una imagen de la alerta
+//     (fondo blanco, logo Cóndor, reportado por, área, turno, fecha y hora,
+//     comentario y fotos), la copia al portapapeles para pegarla en WhatsApp
+//     y luego guarda la alerta normal. Si el dispositivo no permite copiar,
+//     abre Compartir; si tampoco, muestra la imagen con Compartir/Descargar.
+//   · CORREGIDO — Auditoría ahora muestra también las alertas de Tiras de
+//     Bobinas (antes se guardaban pero no aparecían en la lista ni en los
+//     reportes); se agregó su chip de filtro.
+//   · CORREGIDO — Al editar una alerta desde Auditoría se conserva el Turno
+//     (antes se borraba y había que volver a elegirlo).
+//   · MEJORADO — Modal Reportar Alerta más ancho: el área y la fecha ya no
+//     se parten en dos líneas.
+//
+
 // ── Conteo PT — Service Worker v4.80.0 ─────────────────────────────────────
 // Cambios v4.80.0 (Horas Extra ⏰ — mejoras):
 //   · NUEVO — Campo "Motivo / comentario" obligatorio en cada registro de
@@ -1936,7 +1958,7 @@
 //   · Firebase Storage habilitado: se agrega el SDK firebase-storage-compat
 //     v9.23.0, html2canvas v1.4.1 y jsPDF v2.5.1 como dependencias externas.
 
-const CACHE_NAME = 'conteo-pt-v4.80.0';
+const CACHE_NAME = 'conteo-pt-v4.81.0';
 
 const ASSETS = [
   './',
